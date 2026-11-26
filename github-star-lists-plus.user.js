@@ -1,0 +1,3640 @@
+// ==UserScript==
+// @name         GitHub StarLists++
+// @namespace    https://github.com/Fldicoahkiin/GithubStarListsPlus
+// @version      0.1.0
+// @description  GitHub StarLists++
+// @match        https://github.com/*
+// @run-at       document-idle
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_xmlhttpRequest
+// @grant        GM.getValue
+// @grant        GM.setValue
+// @grant        GM.registerMenuCommand
+// @grant        GM.xmlHttpRequest
+// @connect      github.com
+// @connect      api.github.com
+// @homepageURL  https://github.com/Fldicoahkiin/GithubStarListsPlus
+// @supportURL   https://github.com/Fldicoahkiin/GithubStarListsPlus/issues
+// ==/UserScript==
+globalThis.__GITHUB_STAR_LISTS_PLUS_USERSTYLE__ = ".github-star-lists-plus-hidden {\n  display: none !important;\n}\n\n.github-star-lists-plus-native-date,\n.github-star-lists-plus-repo-date {\n  display: inline-block;\n  color: var(--fgColor-muted, #656d76);\n  font-size: 12px;\n  line-height: 18px;\n  font-variant-numeric: tabular-nums;\n  white-space: nowrap;\n}\n\n.github-star-lists-plus-native-date {\n  margin-left: auto;\n  flex-shrink: 0;\n}\n\n.github-star-lists-plus-card-label-slot {\n  display: inline-flex;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-left: 8px;\n  vertical-align: middle;\n}\n\n.github-star-lists-plus-ungrouped-label,\n.github-star-lists-plus-badge {\n  display: inline-flex;\n  align-items: center;\n  min-height: 20px;\n  padding: 0 7px;\n  border: 1px solid var(--borderColor-default, #d0d7de);\n  border-radius: 999px;\n  background: var(--bgColor-muted, #f6f8fa);\n  color: var(--fgColor-muted, #656d76);\n  font-size: 12px;\n  line-height: 18px;\n  text-decoration: none;\n}\n\n.github-star-lists-plus-view-button {\n  display: inline-flex;\n  align-items: center;\n  min-width: 0;\n  white-space: nowrap;\n}\n\n[data-github-star-lists-plus-view-kind='filter'] {\n  max-width: 220px;\n}\n\n[data-github-star-lists-plus-view-kind='filter'] .Button-content,\n[data-github-star-lists-plus-view-kind='filter'] .Button-label {\n  min-width: 0;\n}\n\n[data-github-star-lists-plus-view-kind='filter'] .Button-label {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.github-star-lists-plus-view-button .github-star-lists-plus-view-button-icon[hidden] {\n  display: none !important;\n}\n\n.github-star-lists-plus-view-button.is-active {\n  border-color: var(--button-default-borderColor-active, var(--borderColor-default, #d0d7de));\n  background: var(--button-default-bgColor-active, var(--control-transparent-bgColor-active, var(--bgColor-muted, #f6f8fa)));\n  box-shadow: inset 0 0 0 1px var(--button-default-borderColor-active, var(--borderColor-default, #d0d7de));\n}\n\n.github-star-lists-plus-badge.is-empty {\n  opacity: 0.72;\n}\n\n.github-star-lists-plus-theme-badge {\n  border-color: var(--borderColor-accent-muted, #bfdcff);\n  background: var(--button-default-bgColor-rest, var(--bgColor-default, #ffffff));\n  color: var(--fgColor-accent, #0969da);\n}\n\n.github-star-lists-plus-card-select {\n  display: inline-flex;\n  align-items: center;\n  margin-right: 8px;\n  vertical-align: middle;\n}\n\n.github-star-lists-plus-card-select input {\n  width: 16px;\n  height: 16px;\n}\n\n.github-star-lists-plus-card-selected {\n  outline: 2px solid var(--borderColor-accent-emphasis, var(--color-accent-emphasis, #0969da));\n  outline-offset: 2px;\n  border-radius: 6px;\n}\n\n.github-star-lists-plus-batch-toolbar {\n  position: fixed;\n  left: 50%;\n  bottom: 16px;\n  z-index: 100000;\n  display: flex;\n  flex-wrap: wrap;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  padding: 8px 10px;\n  border: 1px solid var(--borderColor-default, #d0d7de);\n  border-radius: 8px;\n  background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));\n  color: var(--fgColor-default, #24292f);\n  box-shadow: 0 8px 24px rgba(31, 35, 40, 0.12);\n  transform: translate(-50%, 120%);\n  transition: transform 160ms ease;\n}\n\n.github-star-lists-plus-batch-toolbar.is-visible {\n  transform: translate(-50%, 0);\n}\n\n.github-star-lists-plus-batch-panel {\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  width: min(360px, calc(100vw - 24px));\n  padding: 12px;\n  border: 1px solid var(--borderColor-default, #d0d7de);\n  border-radius: 8px;\n  background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));\n  color: var(--fgColor-default, #24292f);\n  box-shadow: 0 12px 28px rgba(31, 35, 40, 0.14);\n}\n\n.github-star-lists-plus-batch-search {\n  width: 100%;\n  min-height: 32px;\n  margin-top: 10px;\n  padding: 5px 12px;\n  border: 1px solid var(--borderColor-default, #d0d7de);\n  border-radius: 6px;\n  background: var(--bgColor-default, #ffffff);\n  color: var(--fgColor-default, #24292f);\n  font-size: 12px;\n}\n\n.github-star-lists-plus-batch-copy {\n  display: grid;\n  gap: 2px;\n}\n\n.github-star-lists-plus-batch-copy small,\n.github-star-lists-plus-batch-empty,\n.github-star-lists-plus-batch-note {\n  font-size: 12px;\n  color: var(--fgColor-muted, #656d76);\n}\n\n.github-star-lists-plus-batch-empty {\n  padding: 10px 12px;\n  border: 1px dashed var(--borderColor-default, #d0d7de);\n  border-radius: 6px;\n  background: var(--bgColor-muted, #f6f8fa);\n}\n\n.github-star-lists-plus-batch-note {\n  min-height: 18px;\n  margin-top: 10px;\n}\n\n.github-star-lists-plus-batch-note[data-tone=\"error\"] {\n  color: var(--fgColor-danger, #cf222e);\n}\n\n.github-star-lists-plus-repo-panel-head,\n.github-star-lists-plus-repo-actions {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 8px;\n}\n\n.github-star-lists-plus-repo-selected {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  min-height: 24px;\n  margin: 10px 0;\n}\n\n.github-star-lists-plus-repo-options {\n  display: grid;\n  gap: 8px;\n  max-height: 260px;\n  overflow: auto;\n}\n\n.github-star-lists-plus-repo-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 8px 10px;\n  border: 1px solid var(--borderColor-default, #d0d7de);\n  border-radius: 6px;\n  background: var(--bgColor-default, #ffffff);\n  cursor: pointer;\n}\n\n.github-star-lists-plus-repo-option.is-checked {\n  background: var(--bgColor-muted, #f6f8fa);\n}\n\n.github-star-lists-plus-repo-date {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  margin-left: 8px;\n  text-align: left;\n  vertical-align: middle;\n  white-space: nowrap;\n}\n\n.github-star-lists-plus-repo-date-star {\n  flex-shrink: 0;\n  color: var(--color-star-fg, #f2cc60);\n  fill: currentColor;\n}\n\n.github-star-lists-plus-repo-date:empty {\n  display: none;\n}\n\n@media (max-width: 768px) {\n  .github-star-lists-plus-batch-toolbar {\n    width: calc(100vw - 24px);\n  }\n\n  .github-star-lists-plus-batch-panel {\n    width: min(360px, calc(100vw - 24px));\n  }\n}\n";
+(() => {
+  const globalObject = globalThis;
+  const storageNamespace = "github-star-lists-plus-userscript";
+  const styleText = globalObject.__GITHUB_STAR_LISTS_PLUS_USERSTYLE__ || "";
+
+  function resolveLegacyOrModern(legacyName, modernName) {
+    if (typeof globalObject[legacyName] === "function") {
+      return globalObject[legacyName].bind(globalObject);
+    }
+
+    const modern = globalObject.GM?.[modernName];
+    if (typeof modern === "function") {
+      return modern.bind(globalObject.GM);
+    }
+
+    return null;
+  }
+
+  const gmApi = {
+    getValue: resolveLegacyOrModern("GM_getValue", "getValue"),
+    setValue: resolveLegacyOrModern("GM_setValue", "setValue"),
+    registerMenuCommand: resolveLegacyOrModern("GM_registerMenuCommand", "registerMenuCommand"),
+    xmlHttpRequest: resolveLegacyOrModern("GM_xmlhttpRequest", "xmlHttpRequest")
+  };
+
+  function localStorageKey(areaName, key) {
+    return `${storageNamespace}:${areaName}:${key}`;
+  }
+
+  async function readValue(areaName, key, fallbackValue) {
+    if (gmApi.getValue) {
+      return gmApi.getValue(localStorageKey(areaName, key), fallbackValue);
+    }
+
+    const rawValue = globalObject.localStorage.getItem(localStorageKey(areaName, key));
+    if (rawValue === null) {
+      return fallbackValue;
+    }
+
+    try {
+      return JSON.parse(rawValue);
+    } catch (_error) {
+      return fallbackValue;
+    }
+  }
+
+  async function writeValue(areaName, key, value) {
+    if (gmApi.setValue) {
+      await gmApi.setValue(localStorageKey(areaName, key), value);
+      return;
+    }
+
+    globalObject.localStorage.setItem(localStorageKey(areaName, key), JSON.stringify(value));
+  }
+
+  function createStorageArea(areaName) {
+    return {
+      async get(defaults = {}) {
+        const result = {};
+        for (const [key, fallbackValue] of Object.entries(defaults)) {
+          result[key] = await readValue(areaName, key, fallbackValue);
+        }
+        return result;
+      },
+      async set(values = {}) {
+        for (const [key, value] of Object.entries(values)) {
+          await writeValue(areaName, key, value);
+        }
+      }
+    };
+  }
+
+  function waitForHead(callback) {
+    if (document.head) {
+      callback();
+      return;
+    }
+
+    let observer = null;
+    let completed = false;
+    const handleReady = () => {
+      if (completed || !document.head) {
+        return;
+      }
+
+      completed = true;
+      observer?.disconnect();
+      document.removeEventListener("readystatechange", handleReady);
+      callback();
+    };
+
+    document.addEventListener("readystatechange", handleReady);
+
+    const attachObserver = () => {
+      if (completed) {
+        return;
+      }
+
+      if (document.head) {
+        handleReady();
+        return;
+      }
+
+      if (!document.documentElement) {
+        globalObject.setTimeout(attachObserver, 0);
+        return;
+      }
+
+      observer = new MutationObserver(handleReady);
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+      handleReady();
+    };
+
+    attachObserver();
+  }
+
+  function installStyle(cssText) {
+    if (!cssText) {
+      return;
+    }
+
+    waitForHead(() => {
+      if (document.getElementById("github-star-lists-plus-userscript-style")) {
+        return;
+      }
+
+      const style = document.createElement("style");
+      style.id = "github-star-lists-plus-userscript-style";
+      style.textContent = cssText;
+      document.head.appendChild(style);
+    });
+  }
+
+  function normalizeHeaders(headers) {
+    if (!headers) {
+      return {};
+    }
+
+    if (headers instanceof Headers) {
+      return Object.fromEntries(headers.entries());
+    }
+
+    return { ...headers };
+  }
+
+  async function requestViaFetch(url, options = {}) {
+    return fetch(url, options);
+  }
+
+  async function requestViaGm(url, options = {}) {
+    if (!gmApi.xmlHttpRequest) {
+      return requestViaFetch(url, options);
+    }
+
+    return new Promise((resolve, reject) => {
+      gmApi.xmlHttpRequest({
+        url,
+        method: options.method || "GET",
+        headers: normalizeHeaders(options.headers),
+        data: typeof options.body === "string" ? options.body : undefined,
+        anonymous: false,
+        onload: (response) => {
+          const responseText = response.responseText || "";
+          resolve({
+            ok: response.status >= 200 && response.status < 300,
+            status: response.status,
+            text: async () => responseText,
+            json: async () => JSON.parse(responseText || "null")
+          });
+        },
+        onerror: () => {
+          reject(new Error(`Userscript request failed: ${options.method || "GET"} ${url}`));
+        },
+        ontimeout: () => {
+          reject(new Error(`Userscript request timed out: ${options.method || "GET"} ${url}`));
+        }
+      });
+    });
+  }
+
+  async function sendMessage(message) {
+    const service = globalObject.GithubStarListsPlusService;
+    if (!service?.handleMessage) {
+      throw new Error("GitHub StarLists++ userscript service is unavailable");
+    }
+
+    return service.handleMessage(message);
+  }
+
+  function registerMenuCommand(label, handler) {
+    if (!gmApi.registerMenuCommand) {
+      return null;
+    }
+
+    try {
+      return gmApi.registerMenuCommand(label, handler);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  globalObject.browser = {
+    storage: {
+      sync: createStorageArea("sync"),
+      local: createStorageArea("local")
+    },
+    runtime: {
+      sendMessage
+    }
+  };
+
+  globalObject.GithubStarListsPlusPlatform = {
+    kind: "userscript",
+    request: requestViaGm,
+    registerMenuCommand,
+    installStyle,
+    notify(message) {
+      console.info(`[GitHub StarLists++] ${message}`);
+    }
+  };
+
+  installStyle(styleText);
+})();
+
+(() => {
+  const runtimeApi = globalThis.browser || globalThis.chrome;
+
+  const DEFAULT_SETTINGS = Object.freeze({
+    showStarDate: true,
+    hideGroupedInAll: true,
+    showListBadges: true,
+    showThemeSuggestions: true,
+    adaptToTheme: true,
+    autoOpenAfterStar: true,
+    enableBatchSelection: true,
+    themeSuggestionVersion: 1,
+    token: ""
+  });
+
+  const STORAGE_KEYS = Object.freeze({
+    settings: "githubStarListsPlusSettings",
+    repoCache: "githubStarListsPlusRepoCache",
+    listCatalog: "githubStarListsPlusListCatalog"
+  });
+
+  const MESSAGE_TYPES = Object.freeze({
+    getStarMetadata: "github-star-lists-plus:get-star-metadata",
+    bulkUnstar: "github-star-lists-plus:bulk-unstar"
+  });
+
+  function callChrome(target, method, args = []) {
+    const fn = target?.[method];
+    if (typeof fn !== "function") {
+      return Promise.reject(new Error(`Extension API not available: ${method}`));
+    }
+
+    if (globalThis.browser) {
+      try {
+        const result = fn.apply(target, args);
+        if (result && typeof result.then === "function") {
+          return result;
+        }
+
+        return Promise.resolve(result);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        fn.call(target, ...args, (value) => {
+          const error = globalThis.chrome?.runtime?.lastError || runtimeApi.runtime?.lastError || runtimeApi.lastError;
+          if (error) {
+            reject(new Error(error.message));
+            return;
+          }
+          resolve(value);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  function normalizeRepoKey(owner, repo) {
+    if (!owner || !repo) {
+      return "";
+    }
+
+    return `${owner}/${repo}`.toLowerCase();
+  }
+
+  function splitRepoKey(repoKey) {
+    const [owner = "", repo = ""] = String(repoKey || "").split("/");
+    return { owner, repo };
+  }
+
+  function parseRepositoryPath(pathname) {
+    const parts = String(pathname || "")
+      .split("/")
+      .filter(Boolean);
+
+    if (parts.length !== 2) {
+      return null;
+    }
+
+    const [owner, repo] = parts;
+
+    if (!owner || !repo || repo.endsWith(".atom")) {
+      return null;
+    }
+
+    return {
+      owner,
+      repo,
+      key: normalizeRepoKey(owner, repo)
+    };
+  }
+
+  function parseRepositoryUrl(urlValue) {
+    try {
+      const url = new URL(urlValue, location.origin);
+      return parseRepositoryPath(url.pathname);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function parseListIdentity(urlValue) {
+    try {
+      const url = new URL(urlValue, location.origin);
+      const listParam = url.searchParams.get("list");
+
+      if (url.pathname === "/stars" && listParam) {
+        return {
+          id: listParam,
+          url: url.toString()
+        };
+      }
+
+      const parts = url.pathname.split("/").filter(Boolean);
+
+      // /stars/USERNAME/lists/LIST-NAME
+      if (parts.length >= 4 && parts[0] === "stars" && parts[2] === "lists") {
+        return {
+          id: parts.slice(3).join("/"),
+          url: url.toString()
+        };
+      }
+
+      // /stars/lists/LIST-NAME (legacy format without username)
+      if (parts.length >= 3 && parts[0] === "stars" && parts[1] === "lists") {
+        return {
+          id: parts.slice(2).join("/"),
+          url: url.toString()
+        };
+      }
+
+      return null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function formatStarDate(value) {
+    if (!value) {
+      return "";
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    const hh = String(date.getHours()).padStart(2, "0");
+    const mm = String(date.getMinutes()).padStart(2, "0");
+    return `${y}/${m}/${d} ${hh}:${mm}`;
+  }
+
+  function debounce(fn, wait = 180) {
+    let timer = 0;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = globalThis.setTimeout(() => fn(...args), wait);
+    };
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
+  }
+
+  function readUserLogin() {
+    const meta = document.querySelector('meta[name="user-login"], meta[name="octolytics-actor-login"]');
+    return meta?.content?.trim() || "";
+  }
+
+  function readRepositoryNwo() {
+    const meta = document.querySelector('meta[name="octolytics-dimension-repository_nwo"]');
+    return meta?.content?.trim() || "";
+  }
+
+  globalThis.GithubStarListsPlusCore = {
+    runtimeApi,
+    DEFAULT_SETTINGS,
+    STORAGE_KEYS,
+    MESSAGE_TYPES,
+    callChrome,
+    normalizeRepoKey,
+    splitRepoKey,
+    parseRepositoryPath,
+    parseRepositoryUrl,
+    parseListIdentity,
+    formatStarDate,
+    debounce,
+    wait,
+    readUserLogin,
+    readRepositoryNwo
+  };
+})();
+
+(() => {
+  const core = globalThis.GithubStarListsPlusCore;
+  const storageApi = core.runtimeApi.storage;
+
+  async function getSyncObject(defaults) {
+    return core.callChrome(storageApi.sync, "get", [defaults]);
+  }
+
+  async function setSyncObject(value) {
+    return core.callChrome(storageApi.sync, "set", [value]);
+  }
+
+  async function getLocalObject(defaults) {
+    return core.callChrome(storageApi.local, "get", [defaults]);
+  }
+
+  async function setLocalObject(value) {
+    return core.callChrome(storageApi.local, "set", [value]);
+  }
+
+  async function getSettings() {
+    const syncData = await getSyncObject({
+      [core.STORAGE_KEYS.settings]: core.DEFAULT_SETTINGS
+    });
+    const stored = syncData[core.STORAGE_KEYS.settings] || {};
+
+    return {
+      ...core.DEFAULT_SETTINGS,
+      ...stored
+    };
+  }
+
+  async function saveSettings(patch) {
+    const current = await getSettings();
+    const nextSettings = {
+      ...current,
+      ...patch
+    };
+
+    await setSyncObject({
+      [core.STORAGE_KEYS.settings]: nextSettings
+    });
+
+    return nextSettings;
+  }
+
+  async function getRepoCache() {
+    const localData = await getLocalObject({
+      [core.STORAGE_KEYS.repoCache]: {}
+    });
+
+    return localData[core.STORAGE_KEYS.repoCache] || {};
+  }
+
+  async function getRepoCacheEntries(repoKeys) {
+    const repoCache = await getRepoCache();
+
+    if (!Array.isArray(repoKeys) || repoKeys.length === 0) {
+      return repoCache;
+    }
+
+    return repoKeys.reduce((result, repoKey) => {
+      if (repoCache[repoKey]) {
+        result[repoKey] = repoCache[repoKey];
+      }
+      return result;
+    }, {});
+  }
+
+  async function mergeRepoCache(patch) {
+    const repoCache = await getRepoCache();
+    const nextCache = {
+      ...repoCache,
+      ...patch
+    };
+
+    await setLocalObject({
+      [core.STORAGE_KEYS.repoCache]: nextCache
+    });
+
+    return nextCache;
+  }
+
+  async function getListCatalog() {
+    const localData = await getLocalObject({
+      [core.STORAGE_KEYS.listCatalog]: { items: [], updatedAt: 0 }
+    });
+
+    return localData[core.STORAGE_KEYS.listCatalog] || { items: [], updatedAt: 0 };
+  }
+
+  async function saveListCatalog(items) {
+    const nextCatalog = {
+      items,
+      updatedAt: Date.now()
+    };
+
+    await setLocalObject({
+      [core.STORAGE_KEYS.listCatalog]: nextCatalog
+    });
+
+    return nextCatalog;
+  }
+
+  globalThis.GithubStarListsPlusStorage = {
+    getSettings,
+    saveSettings,
+    getRepoCache,
+    getRepoCacheEntries,
+    mergeRepoCache,
+    getListCatalog,
+    saveListCatalog
+  };
+})();
+
+(() => {
+  const core = globalThis.GithubStarListsPlusCore;
+  const storage = globalThis.GithubStarListsPlusStorage;
+
+  function createHeaders(settings, accept) {
+    const headers = {
+      Accept: accept,
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+
+    if (settings.token) {
+      headers.Authorization = `Bearer ${settings.token}`;
+    }
+
+    return headers;
+  }
+
+  async function request(url, options) {
+    const platformRequest = globalThis.GithubStarListsPlusPlatform?.request;
+    if (typeof platformRequest === "function") {
+      return platformRequest(url, options);
+    }
+
+    return fetch(url, options);
+  }
+
+  async function fetchJson(url, settings, accept) {
+    const response = await request(url, {
+      credentials: "include",
+      headers: createHeaders(settings, accept)
+    });
+
+    if (!response.ok) {
+      const error = new Error(`GitHub API request failed: ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+
+    return response.json();
+  }
+
+  function buildCandidatePages(pageHint) {
+    const starPage = Math.max(1, Number(pageHint || 1));
+    const estimatedOffset = (starPage - 1) * 30;
+    const estimatedApiPage = Math.floor(estimatedOffset / 100) + 1;
+    const pages = new Set([estimatedApiPage, estimatedApiPage + 1, estimatedApiPage + 2, 1]);
+
+    return [...pages].filter((value) => value > 0);
+  }
+
+  async function loadStarMetadata(repoKeys, pageHint, username) {
+    const settings = await storage.getSettings();
+    const repoCache = await storage.getRepoCacheEntries(repoKeys);
+    const now = Date.now();
+    const sixHours = 6 * 60 * 60 * 1000;
+    const result = {};
+    const missing = [];
+
+    for (const repoKey of repoKeys) {
+      const cached = repoCache[repoKey];
+      if (cached?.starredAt && cached.starCheckedAt && now - cached.starCheckedAt < sixHours) {
+        result[repoKey] = cached.starredAt;
+      } else {
+        missing.push(repoKey);
+      }
+    }
+
+    if (missing.length === 0) {
+      return result;
+    }
+
+    const unresolved = new Set(missing);
+    const freshCache = {};
+    const accept = "application/vnd.github.star+json";
+    const urls = buildCandidatePages(pageHint).map((page) => ({
+      authUrl: `https://api.github.com/user/starred?per_page=100&page=${page}&sort=created&direction=desc`,
+      publicUrl: username
+        ? `https://api.github.com/users/${encodeURIComponent(username)}/starred?per_page=100&page=${page}&sort=created&direction=desc`
+        : ""
+    }));
+
+    for (const item of urls) {
+      if (unresolved.size === 0) {
+        break;
+      }
+
+      let payload = [];
+      try {
+        payload = await fetchJson(item.authUrl, settings, accept);
+      } catch (error) {
+        const canFallback = !settings.token && username && (error.status === 401 || error.status === 403 || error.status === 404);
+        if (!canFallback || !item.publicUrl) {
+          continue;
+        }
+
+        try {
+          payload = await fetchJson(item.publicUrl, { token: "" }, accept);
+        } catch (_fallbackError) {
+          continue;
+        }
+      }
+
+      if (!Array.isArray(payload) || payload.length === 0) {
+        continue;
+      }
+
+      for (const entry of payload) {
+        const repo = entry?.repo || entry;
+        const starredAt = entry?.starred_at || "";
+        if (!repo?.full_name) {
+          continue;
+        }
+
+        const repoKey = String(repo.full_name).toLowerCase();
+        if (!unresolved.has(repoKey)) {
+          continue;
+        }
+
+        result[repoKey] = starredAt;
+        freshCache[repoKey] = {
+          ...(repoCache[repoKey] || {}),
+          starredAt,
+          starCheckedAt: now
+        };
+        unresolved.delete(repoKey);
+      }
+    }
+
+    if (Object.keys(freshCache).length > 0) {
+      await storage.mergeRepoCache(freshCache);
+    }
+
+    return result;
+  }
+
+  async function bulkUnstar(repoKeys) {
+    const settings = await storage.getSettings();
+    const failures = [];
+
+    for (const repoKey of repoKeys) {
+      const { owner, repo } = core.splitRepoKey(repoKey);
+      if (!owner || !repo) {
+        failures.push(repoKey);
+        continue;
+      }
+
+      const response = await request(`https://api.github.com/user/starred/${owner}/${repo}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: createHeaders(settings, "application/vnd.github+json")
+      });
+
+      if (!response.ok && response.status !== 404) {
+        failures.push(repoKey);
+      }
+    }
+
+    return {
+      ok: failures.length === 0,
+      failures
+    };
+  }
+
+  async function handleMessage(message) {
+    if (message?.type === core.MESSAGE_TYPES.getStarMetadata) {
+      const data = await loadStarMetadata(message.repoKeys || [], message.pageHint, message.username);
+      return { ok: true, data };
+    }
+
+    if (message?.type === core.MESSAGE_TYPES.bulkUnstar) {
+      const data = await bulkUnstar(message.repoKeys || []);
+      return { ok: true, data };
+    }
+
+    return { ok: false, error: "unknown-message" };
+  }
+
+  globalThis.GithubStarListsPlusService = {
+    createHeaders,
+    loadStarMetadata,
+    bulkUnstar,
+    handleMessage
+  };
+})();
+
+(() => {
+  const platform = globalThis.GithubStarListsPlusPlatform;
+  const storage = globalThis.GithubStarListsPlusStorage;
+  const core = globalThis.GithubStarListsPlusCore;
+
+  if (!platform?.registerMenuCommand || !storage || !core) {
+    return;
+  }
+
+  function showMessage(message) {
+    platform.notify(message);
+    globalThis.alert(message);
+  }
+
+  async function reloadAfterSave(message) {
+    showMessage(message);
+    globalThis.location.reload();
+  }
+
+  async function toggleSetting(key, label) {
+    const settings = await storage.getSettings();
+    const nextValue = !settings[key];
+    await storage.saveSettings({ [key]: nextValue });
+    await reloadAfterSave(`${label} is now ${nextValue ? "enabled" : "disabled"}. The page will reload.`);
+  }
+
+  async function configureToken() {
+    const settings = await storage.getSettings();
+    const nextValue = globalThis.prompt(
+      "Paste a GitHub token for higher API quota. Leave empty to remove it.",
+      settings.token || ""
+    );
+
+    if (nextValue === null) {
+      return;
+    }
+
+    await storage.saveSettings({ token: nextValue.trim() });
+    await reloadAfterSave(nextValue.trim() ? "GitHub token saved. The page will reload." : "GitHub token removed. The page will reload.");
+  }
+
+  async function resetCache() {
+    await core.callChrome(globalThis.browser.storage.local, "set", [{
+      [core.STORAGE_KEYS.repoCache]: {},
+      [core.STORAGE_KEYS.listCatalog]: { items: [], updatedAt: 0 }
+    }]);
+    await reloadAfterSave("GitHub StarLists++ cache cleared. The page will reload.");
+  }
+
+  async function registerMenu() {
+    const settings = await storage.getSettings();
+    const commands = [
+      [`GitHub StarLists++: ${settings.showStarDate ? "Disable" : "Enable"} starred date`, () => toggleSetting("showStarDate", "Starred date")],
+      [`GitHub StarLists++: ${settings.hideGroupedInAll ? "Disable" : "Enable"} hide grouped repos in All`, () => toggleSetting("hideGroupedInAll", "Hide grouped repos in All")],
+      [`GitHub StarLists++: ${settings.showListBadges ? "Disable" : "Enable"} Ungrouped label`, () => toggleSetting("showListBadges", "Ungrouped label")],
+      [`GitHub StarLists++: ${settings.autoOpenAfterStar ? "Disable" : "Enable"} auto-open list panel`, () => toggleSetting("autoOpenAfterStar", "Auto-open list panel")],
+      ["GitHub StarLists++: Configure GitHub token", configureToken],
+      ["GitHub StarLists++: Reset cached metadata", resetCache]
+    ];
+
+    for (const [label, handler] of commands) {
+      platform.registerMenuCommand(label, () => {
+        handler().catch((error) => {
+          showMessage(error.message || String(error));
+        });
+      });
+    }
+  }
+
+  registerMenu().catch((error) => {
+    console.error("GitHub StarLists++ userscript menu init failed", error);
+  });
+})();
+
+(() => {
+  const core = globalThis.GithubStarListsPlusCore;
+  const storage = globalThis.GithubStarListsPlusStorage;
+  const STARS_VIEW_QUERY_KEYS = Object.freeze({
+    sort: "slp-sort",
+    filter: "slp-filter"
+  });
+  const CUSTOM_STARS_SORT_MODES = new Set(["star-desc", "star-asc"]);
+
+  const THEME_SUGGESTION_VERSION = 1;
+  const THEME_RULES = Object.freeze([
+    {
+      id: "claude-mcp",
+      name: "Claude / MCP",
+      keywords: ["claude", "anthropic", "mcp", "model context protocol", "claude-code", "agent skill", "codex"],
+      excludes: ["paper"]
+    },
+    {
+      id: "ai-tools",
+      name: "AI Tools",
+      keywords: ["llm", "ai", "openai", "gemini", "rag", "agent", "prompt", "copilot", "embedding", "inference"],
+      excludes: ["daily", "game"]
+    },
+    {
+      id: "browser-extension",
+      name: "Browser Extension",
+      keywords: ["extension", "userscript", "tampermonkey", "violentmonkey", "chrome extension", "firefox addon", "browser addon"],
+      excludes: []
+    },
+    {
+      id: "dev-tooling",
+      name: "Dev Tooling",
+      keywords: ["cli", "terminal", "developer", "devtool", "tooling", "workflow", "automation", "sdk", "runtime", "debug"],
+      excludes: []
+    },
+    {
+      id: "security",
+      name: "Security",
+      keywords: ["security", "exploit", "cve", "vulnerability", "poc", "forensics", "audit", "sandbox", "pentest"],
+      excludes: []
+    },
+    {
+      id: "design-ui",
+      name: "Design / UI",
+      keywords: ["design", "ui", "component", "figma", "icon", "theme", "css", "animation", "visual"],
+      excludes: []
+    },
+    {
+      id: "desktop-app",
+      name: "Desktop App",
+      keywords: ["desktop", "electron", "tauri", "cross-platform", "macos", "windows app", "native app"],
+      excludes: []
+    },
+    {
+      id: "knowledge-collection",
+      name: "Knowledge / Collection",
+      keywords: ["awesome", "collection", "resources", "curated", "list of", "roadmap", "guide", "tutorial", "learning"],
+      excludes: []
+    }
+  ]);
+
+
+  const state = {
+    lastUrl: "",
+    routeTimer: 0,
+    pageObserver: null,
+    pageCleanup: null,
+    repoPanelCleanup: null,
+    batchPanelCleanup: null,
+    cards: [],
+    bootstrapped: false,
+    starDatesReady: false,
+    selectedKeys: new Set(),
+    lastSelectedIndex: -1,
+    view: {
+      filter: "all",
+      filterDirty: false,
+      search: "",
+      sort: "default"
+    }
+  };
+
+  function sendRuntimeMessage(message) {
+    return core.callChrome(core.runtimeApi.runtime, "sendMessage", [message]);
+  }
+
+  function isVisible(element) {
+    if (!element) {
+      return false;
+    }
+
+    const rect = element.getBoundingClientRect();
+    const style = globalThis.getComputedStyle(element);
+    return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
+  }
+
+  function normalizeText(value) {
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function isStarsPage() {
+    if (location.origin !== "https://github.com") return false;
+    if (location.pathname === "/stars" || location.pathname.startsWith("/stars/")) return true;
+    if (location.search.includes("tab=stars")) return true;
+    return Boolean(currentListIdentity());
+  }
+
+  function isRepositoryPage() {
+    if (isStarsPage()) return false;
+    return Boolean(core.readRepositoryNwo());
+  }
+
+  const GENERIC_LIST_PATHS = ["/trending", "/topics", "/search", "/explore", "/collections"];
+
+  function isGenericRepoListPage() {
+    if (isStarsPage() || isRepositoryPage()) return false;
+    const path = location.pathname;
+    return GENERIC_LIST_PATHS.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+  }
+
+  function getTargetStarsUser() {
+    if (location.pathname === "/stars" || location.pathname.startsWith("/stars/")) {
+      return core.readUserLogin();
+    }
+    const match = location.pathname.match(/^\/([^/]+)$/);
+    if (match && location.search.includes("tab=stars")) {
+      return match[1];
+    }
+    return core.readUserLogin();
+  }
+
+  function currentListIdentity() {
+    return core.parseListIdentity(location.href);
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function dedupeBy(items, getKey) {
+    const seen = new Set();
+    const result = [];
+
+    for (const item of items) {
+      const key = getKey(item);
+      if (!key || seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      result.push(item);
+    }
+
+    return result;
+  }
+
+  function cleanupPage() {
+    closeBatchListPanel();
+
+    if (typeof state.pageCleanup === "function") {
+      state.pageCleanup();
+      state.pageCleanup = null;
+    }
+
+    if (state.pageObserver) {
+      state.pageObserver.disconnect();
+      state.pageObserver = null;
+    }
+
+    state.cards = [];
+    state.starDatesReady = false;
+    state.selectedKeys.clear();
+    state.lastSelectedIndex = -1;
+  }
+
+  function scheduleRouteRefresh() {
+    clearTimeout(state.routeTimer);
+    state.routeTimer = globalThis.setTimeout(() => {
+      refreshRoute().catch((error) => {
+        console.error("GitHub StarLists++ route refresh failed", error);
+      });
+    }, 120);
+  }
+
+  function watchRouteChanges() {
+    const routeEvents = ["pjax:end", "turbo:load", "popstate"];
+    for (const eventName of routeEvents) {
+      document.addEventListener(eventName, scheduleRouteRefresh, true);
+    }
+
+    let observer = null;
+    const handleMutation = () => {
+      if (location.href !== state.lastUrl) {
+        scheduleRouteRefresh();
+      }
+    };
+    const attachObserver = () => {
+      if (observer || !document.documentElement) {
+        if (!observer && !document.documentElement) {
+          globalThis.setTimeout(attachObserver, 0);
+        }
+        return;
+      }
+
+      observer = new MutationObserver(handleMutation);
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+    };
+
+    attachObserver();
+  }
+
+  async function refreshRoute() {
+    if (location.href === state.lastUrl && state.pageCleanup) {
+      return;
+    }
+
+    state.lastUrl = location.href;
+    cleanupPage();
+
+    if (isStarsPage()) {
+      await setupStarsPage();
+      return;
+    }
+
+    if (isRepositoryPage()) {
+      await setupRepositoryPage();
+      return;
+    }
+
+    if (isGenericRepoListPage()) {
+      await setupGenericListPage();
+    }
+  }
+
+  function extractCardRoot(element) {
+    return element?.closest(
+      "div.col-12.d-block.width-full.tmp-py-4.border-bottom.color-border-muted, li.tmp-py-4.border-bottom, .col-12.d-block.width-full.tmp-py-4.border-bottom, article, .Box-row, li, .col-12, div[class*='border-bottom']"
+    ) || null;
+  }
+
+  function findRepoLink(root) {
+    if (!root) {
+      return null;
+    }
+
+    const candidates = [...root.querySelectorAll("a[href]")];
+    return candidates.find((anchor) => core.parseRepositoryUrl(anchor.href));
+  }
+
+  function extractCardDescription(root) {
+    const paragraph = root?.querySelector("p, .color-fg-muted, .wb-break-word");
+    return paragraph?.textContent?.trim() || "";
+  }
+
+  function findStarRelatedTimeElement(scopeRoot) {
+    const timeEls = [...scopeRoot?.querySelectorAll("relative-time[datetime], time[datetime]") || []];
+
+    for (const timeEl of timeEls) {
+      const directContext = normalizeText(
+        `${timeEl.parentElement?.textContent || ""} ${timeEl.closest("span, div, p, li")?.textContent || ""}`
+      ).toLowerCase();
+      const previousText = normalizeText(timeEl.previousSibling?.textContent || "").toLowerCase();
+      if (directContext.includes("starred") || previousText.includes("starred")) {
+        return timeEl;
+      }
+    }
+
+    return null;
+  }
+
+  function extractStarDateFromDom(root) {
+    return findStarRelatedTimeElement(root)?.getAttribute("datetime") || "";
+  }
+
+  function extractStarDateMapFromDocument(doc, repoKeys) {
+    const wantedKeys = Array.isArray(repoKeys) && repoKeys.length > 0
+      ? new Set(repoKeys.map((repoKey) => String(repoKey || "").toLowerCase()))
+      : null;
+    const anchors = [...doc.querySelectorAll("a[href]")];
+    const seenRoots = new Set();
+    const result = {};
+
+    for (const anchor of anchors) {
+      const repoInfo = core.parseRepositoryUrl(anchor.href);
+      if (!repoInfo || (wantedKeys && !wantedKeys.has(repoInfo.key))) {
+        continue;
+      }
+
+      const root = extractCardRoot(anchor);
+      if (!root || seenRoots.has(root)) {
+        continue;
+      }
+
+      seenRoots.add(root);
+      const starredAt = extractStarDateFromDom(root);
+      if (starredAt) {
+        result[repoInfo.key] = starredAt;
+      }
+    }
+
+    return result;
+  }
+
+  function buildStarsRepositoriesUrl(username, options = {}) {
+    if (!username) {
+      return "";
+    }
+
+    const url = new URL(`/stars/${encodeURIComponent(username)}/repositories`, location.origin);
+    url.searchParams.set("filter", "all");
+
+    if (options.pageHint) {
+      url.searchParams.set("page", String(options.pageHint));
+    }
+
+    if (options.query) {
+      url.searchParams.set("q", String(options.query).trim());
+    }
+
+    return url.toString();
+  }
+
+  function collectStarCards() {
+    const main = document.querySelector("main");
+    if (!main) {
+      return [];
+    }
+
+    const starForms = [...main.querySelectorAll("form[action*='/star'], form[action*='/unstar']")];
+    const repoHeadings = [...main.querySelectorAll("h1 a[href], h2 a[href], h3 a[href]")];
+    const candidates = [...starForms, ...repoHeadings];
+    const cards = [];
+    const seenRoots = new Set();
+    const seenKeys = new Set();
+
+    for (const candidate of candidates) {
+      const root = extractCardRoot(candidate);
+      if (!root || seenRoots.has(root)) {
+        continue;
+      }
+
+      const repoLink = candidate.matches?.("a[href]") ? candidate : findRepoLink(root);
+      const repoInfo = repoLink ? core.parseRepositoryUrl(repoLink.href) : null;
+      if (!repoInfo || seenKeys.has(repoInfo.key)) {
+        continue;
+      }
+
+      seenRoots.add(root);
+      seenKeys.add(repoInfo.key);
+      cards.push({
+        root,
+        starForm: root.querySelector("form[action*='/star'], form[action*='/unstar']") || null,
+        key: repoInfo.key,
+        owner: repoInfo.owner,
+        repo: repoInfo.repo,
+        repoLink,
+        description: extractCardDescription(root),
+        domStarredAt: extractStarDateFromDom(root),
+        domOrder: cards.length
+      });
+    }
+
+    return cards;
+  }
+
+  function findCardInfoRow(card) {
+    const nativeTime = findStarRelatedTimeElement(card.root);
+    if (nativeTime) {
+      const row = nativeTime.closest("div, p, li, span");
+      if (row && card.root.contains(row)) {
+        return row;
+      }
+    }
+
+    return card.root.querySelector(
+      ".f6.color-fg-muted.mt-2, p.color-fg-muted.text-small, div.color-fg-muted.text-small, .text-small.color-fg-muted, .color-fg-muted.f6"
+    );
+  }
+
+  function findCardNativeTime(card) {
+    const directMatch = findStarRelatedTimeElement(card.root);
+    if (directMatch) {
+      return directMatch;
+    }
+
+    const row = findCardInfoRow(card);
+    if (!row) {
+      return null;
+    }
+
+    const candidates = [...row.querySelectorAll("relative-time[datetime], time[datetime]")];
+    return candidates[candidates.length - 1] || null;
+  }
+
+  function clearNativeDateLabel(timeEl) {
+    if (!timeEl) {
+      return;
+    }
+
+    const previousTextNode = timeEl.previousSibling;
+    if (previousTextNode?.nodeType === Node.TEXT_NODE && /\b(updated|starred)\b/i.test(previousTextNode.textContent || "")) {
+      previousTextNode.textContent = previousTextNode.textContent.replace(/\b(updated|starred)\b\s*/gi, "");
+      return;
+    }
+
+    const previousElement = timeEl.previousElementSibling;
+    if (previousElement && /^(updated|starred)$/i.test(normalizeText(previousElement.textContent))) {
+      previousElement.remove();
+    }
+  }
+
+  function ensureCardDateHost(card) {
+    let host = card.root.querySelector(".github-star-lists-plus-native-date");
+    if (host) {
+      return host;
+    }
+
+    const row = findCardInfoRow(card);
+    if (!row) {
+      return null;
+    }
+
+    const nativeTime = findCardNativeTime(card);
+    if (nativeTime) {
+      clearNativeDateLabel(nativeTime);
+      nativeTime.style.display = "none";
+    }
+
+    host = document.createElement("span");
+    host.className = "github-star-lists-plus-native-date no-wrap";
+
+    if (!row.style.display || row.style.display === "block") {
+      const computed = globalThis.getComputedStyle(row).display;
+      if (computed !== "flex" && computed !== "inline-flex") {
+        row.style.display = "flex";
+        row.style.flexWrap = "wrap";
+        row.style.alignItems = "center";
+      }
+    }
+
+    row.appendChild(host);
+    return host;
+  }
+
+  function ensureCardLabelHost(card) {
+    const row = findCardInfoRow(card);
+    if (!row) {
+      return null;
+    }
+
+    let host = row.querySelector(".github-star-lists-plus-card-label-slot");
+    if (!host) {
+      host = document.createElement("span");
+      host.className = "github-star-lists-plus-card-label-slot";
+      row.appendChild(host);
+    }
+
+    return host;
+  }
+
+  function renderCardStarDate(card, cacheEntry) {
+    if (!state.settings?.showStarDate) {
+      return;
+    }
+
+    const starredAt = cacheEntry?.starredAt || card.domStarredAt || "";
+    if (!starredAt) {
+      return;
+    }
+
+    const host = ensureCardDateHost(card);
+    if (host) {
+      host.textContent = core.formatStarDate(starredAt);
+    }
+  }
+
+  function getCardListCount(cacheEntry) {
+    const listCount = Array.isArray(cacheEntry?.lists) ? cacheEntry.lists.length : 0;
+    return currentListIdentity() ? Math.max(1, listCount) : listCount;
+  }
+
+  function buildThemeExplanation(themeSuggestion) {
+    const matched = Array.isArray(themeSuggestion?.matchedKeywords) ? themeSuggestion.matchedKeywords.filter(Boolean) : [];
+    return matched.length > 0 ? `Matched: ${matched.join(", ")}` : "";
+  }
+
+  function renderCardThemeLabel(card, cacheEntry) {
+    const themeSuggestion = cacheEntry?.themeSuggestion;
+    if (!state.settings?.showThemeSuggestions || !themeSuggestion?.id || cacheEntry?.themeFeedback?.dismissed) {
+      return "";
+    }
+
+    const explanation = buildThemeExplanation(themeSuggestion);
+    const title = explanation ? ` title="${escapeHtml(explanation)}"` : "";
+    return `<span class="github-star-lists-plus-badge github-star-lists-plus-theme-badge" data-theme-id="${escapeHtml(themeSuggestion.id)}"${title}>Theme: ${escapeHtml(themeSuggestion.name)}</span>`;
+  }
+
+  function renderCardMeta(card, cacheEntry) {
+    renderCardStarDate(card, cacheEntry);
+
+    const host = card.root.querySelector(".github-star-lists-plus-card-label-slot");
+    const listCount = getCardListCount(cacheEntry);
+    const showUngrouped = Boolean(state.settings?.showListBadges) && listCount === 0;
+    const themeMarkup = renderCardThemeLabel(card, cacheEntry);
+
+    if (!showUngrouped && !themeMarkup) {
+      host?.remove();
+      return;
+    }
+
+    const nextHost = ensureCardLabelHost(card);
+    if (!nextHost) {
+      return;
+    }
+
+    nextHost.innerHTML = `${showUngrouped ? '<span class="github-star-lists-plus-ungrouped-label">Ungrouped</span>' : ''}${themeMarkup}`;
+  }
+
+  function ensureSelectionControl(card, index) {
+    if (!card.starForm || !card.repoLink || !card.repoLink.parentElement) {
+      return;
+    }
+
+    const heading = card.repoLink.closest("h1, h2, h3") || card.repoLink.parentElement;
+    let checkbox = heading.querySelector(".github-star-lists-plus-card-select input");
+    if (checkbox) {
+      checkbox.checked = state.selectedKeys.has(card.key);
+      return;
+    }
+
+    const wrapper = document.createElement("label");
+    wrapper.className = "github-star-lists-plus-card-select";
+    wrapper.title = "Select repository for batch actions";
+
+    checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.repoKey = card.key;
+    checkbox.addEventListener("click", (event) => {
+      event.stopPropagation();
+      handleSelectionToggle(card, index, checkbox.checked, event);
+    });
+
+    wrapper.appendChild(checkbox);
+    heading.insertBefore(wrapper, heading.firstChild);
+  }
+
+  function handleSelectionToggle(card, index, checked, event) {
+    if (event.shiftKey && state.lastSelectedIndex >= 0) {
+      const start = Math.min(state.lastSelectedIndex, index);
+      const end = Math.max(state.lastSelectedIndex, index);
+      for (let cursor = start; cursor <= end; cursor += 1) {
+        const targetCard = state.cards[cursor];
+        if (!targetCard) {
+          continue;
+        }
+        if (checked) {
+          state.selectedKeys.add(targetCard.key);
+        } else {
+          state.selectedKeys.delete(targetCard.key);
+        }
+        updateCardSelection(targetCard);
+      }
+    } else {
+      if (checked) {
+        state.selectedKeys.add(card.key);
+      } else {
+        state.selectedKeys.delete(card.key);
+      }
+      updateCardSelection(card);
+      state.lastSelectedIndex = index;
+    }
+
+    syncBatchToolbar();
+  }
+
+  function updateCardSelection(card) {
+    const checked = state.selectedKeys.has(card.key);
+    card.root.classList.toggle("github-star-lists-plus-card-selected", checked);
+    const input = card.root.querySelector(".github-star-lists-plus-card-select input");
+    if (input) {
+      input.checked = checked;
+    }
+  }
+
+  function findCardByKey(repoKey) {
+    return state.cards.find((card) => card.key === repoKey) || null;
+  }
+
+  function setSelectionForKeys(repoKeys, checked) {
+    for (const repoKey of repoKeys) {
+      const card = findCardByKey(repoKey);
+      if (!card) {
+        continue;
+      }
+
+      if (checked) {
+        state.selectedKeys.add(repoKey);
+      } else {
+        state.selectedKeys.delete(repoKey);
+      }
+
+      updateCardSelection(card);
+    }
+  }
+
+  function syncBatchToolbar() {
+    const toolbar = document.querySelector(".github-star-lists-plus-batch-toolbar");
+    if (!toolbar) {
+      return;
+    }
+
+    const count = state.selectedKeys.size;
+    const hasLists = Array.isArray(state.listCatalog) && state.listCatalog.length > 0;
+    toolbar.classList.toggle("is-visible", count > 0);
+    toolbar.querySelector("[data-role='count']").textContent = `${count} selected`;
+    toolbar.querySelector("button[data-action='add-lists']").disabled = count === 0 || !hasLists;
+    toolbar.querySelector("button[data-action='remove-lists']").disabled = count === 0 || !hasLists;
+    toolbar.querySelector("button[data-action='unstar']").disabled = count === 0;
+    toolbar.querySelector("button[data-action='clear']").disabled = count === 0;
+
+    if (count === 0) {
+      closeBatchListPanel();
+    }
+  }
+
+  function discoverListCatalogFromDocument() {
+    const anchors = [...document.querySelectorAll("a[href]")];
+    const items = [];
+
+    for (const anchor of anchors) {
+      const identity = core.parseListIdentity(anchor.href);
+      if (!identity) {
+        continue;
+      }
+
+      const name = anchor.textContent.trim() || identity.id;
+      if (!name || /^lists?$/i.test(name)) {
+        continue;
+      }
+
+      items.push({
+        id: identity.id,
+        name,
+        url: identity.url
+      });
+    }
+
+    return dedupeBy(items, (item) => item.id);
+  }
+
+  async function loadListCatalog() {
+    const documentItems = discoverListCatalogFromDocument();
+    if (documentItems.length > 0) {
+      await storage.saveListCatalog(documentItems);
+      return documentItems;
+    }
+
+    const cachedCatalog = await storage.getListCatalog();
+    return Array.isArray(cachedCatalog.items) ? cachedCatalog.items : [];
+  }
+
+  function extractRepoKeysFromDocument(doc) {
+    const anchors = [...doc.querySelectorAll("a[href]")];
+    const result = new Set();
+
+    for (const anchor of anchors) {
+      const repoInfo = core.parseRepositoryUrl(anchor.href);
+      if (repoInfo) {
+        result.add(repoInfo.key);
+      }
+    }
+
+    return result;
+  }
+
+  function findNextPageUrl(doc) {
+    const nextAnchor = doc.querySelector("a[rel='next'], a.next_page");
+    if (!nextAnchor) {
+      return "";
+    }
+
+    try {
+      return new URL(nextAnchor.getAttribute("href"), location.origin).toString();
+    } catch (_error) {
+      return "";
+    }
+  }
+
+  async function crawlListMembership(repoKeys, listCatalog) {
+    if (!Array.isArray(repoKeys) || repoKeys.length === 0 || !Array.isArray(listCatalog) || listCatalog.length === 0) {
+      return {};
+    }
+
+    const result = repoKeys.reduce((map, repoKey) => {
+      map[repoKey] = [];
+      return map;
+    }, {});
+    const domParser = new DOMParser();
+    const listsToScan = listCatalog.slice(0, 12);
+
+    for (const list of listsToScan) {
+      let pageUrl = list.url;
+      let pageCount = 0;
+
+      while (pageUrl && pageCount < 6) {
+        let response;
+        try {
+          response = await fetch(pageUrl, {
+            credentials: "include"
+          });
+        } catch (_error) {
+          break;
+        }
+
+        if (!response.ok) {
+          break;
+        }
+
+        const html = await response.text();
+        const doc = domParser.parseFromString(html, "text/html");
+        const keys = extractRepoKeysFromDocument(doc);
+        for (const repoKey of keys) {
+          if (!Object.hasOwn(result, repoKey)) {
+            continue;
+          }
+
+          result[repoKey].push({
+            id: list.id,
+            name: list.name,
+            url: list.url
+          });
+        }
+
+        pageUrl = findNextPageUrl(doc);
+        pageCount += 1;
+      }
+    }
+
+    return result;
+  }
+
+  async function hydrateRepoLists(cards, listCatalog) {
+    const repoKeys = cards.map((card) => card.key);
+    const cachedEntries = await storage.getRepoCacheEntries(repoKeys);
+    const now = Date.now();
+    const twelveHours = 12 * 60 * 60 * 1000;
+    const missing = [];
+
+    for (const card of cards) {
+      const cached = cachedEntries[card.key] || {};
+      renderCardMeta(card, cached);
+      if (!cached.listCheckedAt || now - cached.listCheckedAt > twelveHours) {
+        missing.push(card.key);
+      }
+    }
+
+    if (missing.length === 0 || !Array.isArray(listCatalog) || listCatalog.length === 0) {
+      return cachedEntries;
+    }
+
+    const crawled = await crawlListMembership(missing, listCatalog);
+    const patch = {};
+
+    for (const repoKey of missing) {
+      patch[repoKey] = {
+        ...(cachedEntries[repoKey] || {}),
+        lists: dedupeBy(crawled[repoKey] || [], (item) => item.id),
+        listCheckedAt: now
+      };
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await storage.mergeRepoCache(patch);
+    }
+
+    const merged = {
+      ...cachedEntries,
+      ...patch
+    };
+
+    for (const card of cards) {
+      renderCardMeta(card, merged[card.key] || {});
+    }
+
+    return merged;
+  }
+
+  async function hydrateStarDates(cards) {
+    const repoKeys = cards.map((card) => card.key);
+    const cachedEntries = await storage.getRepoCacheEntries(repoKeys);
+    const patch = {};
+    const missing = [];
+    const pageHint = Number(new URL(location.href).searchParams.get("page") || 1);
+    const searchQuery = new URL(location.href).searchParams.get("q") || "";
+    const starsUsername = getTargetStarsUser();
+
+    // Extract dates from DOM relative-time[datetime] elements first
+    for (const card of cards) {
+      const cached = cachedEntries[card.key];
+      if (cached?.starredAt) {
+        continue;
+      }
+
+      if (card.domStarredAt) {
+        patch[card.key] = {
+          ...(cached || {}),
+          starredAt: card.domStarredAt,
+          starCheckedAt: Date.now()
+        };
+      } else {
+        missing.push(card.key);
+      }
+    }
+
+    // Fetch remaining missing dates via API
+    if (missing.length > 0) {
+      try {
+        const response = await sendRuntimeMessage({
+          type: core.MESSAGE_TYPES.getStarMetadata,
+          repoKeys: missing,
+          pageHint,
+          username: starsUsername
+        });
+
+        if (response?.ok && response.data) {
+          for (const repoKey of missing) {
+            const starredAt = response.data[repoKey];
+            if (!starredAt) {
+              continue;
+            }
+
+            patch[repoKey] = {
+              ...(cachedEntries[repoKey] || {}),
+              starredAt,
+              starCheckedAt: Date.now()
+            };
+          }
+        }
+      } catch (_error) {
+        // Silently ignore API fallback failures
+      }
+    }
+
+    const unresolved = missing.filter((repoKey) => !(patch[repoKey]?.starredAt));
+    if (unresolved.length > 0 && starsUsername) {
+      try {
+        const pageUrl = buildStarsRepositoriesUrl(starsUsername, {
+          pageHint,
+          query: searchQuery
+        });
+
+        if (pageUrl) {
+          const response = await fetch(pageUrl, {
+            credentials: "include"
+          });
+
+          if (response.ok) {
+            const html = await response.text();
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            const matchedDates = extractStarDateMapFromDocument(doc, unresolved);
+
+            for (const repoKey of unresolved) {
+              const starredAt = matchedDates[repoKey];
+              if (!starredAt) {
+                continue;
+              }
+
+              patch[repoKey] = {
+                ...(patch[repoKey] || cachedEntries[repoKey] || {}),
+                starredAt,
+                starCheckedAt: Date.now()
+              };
+            }
+          }
+        }
+      } catch (_error) {
+        // Silently ignore HTML fallback failures
+      }
+    }
+
+    const unresolvedAfterPage = missing.filter((repoKey) => !(patch[repoKey]?.starredAt));
+    for (const repoKey of unresolvedAfterPage) {
+      const starredAt = await fetchStarDateFromStarsSearch(repoKey, starsUsername);
+      if (!starredAt) {
+        continue;
+      }
+
+      patch[repoKey] = {
+        ...(patch[repoKey] || cachedEntries[repoKey] || {}),
+        starredAt,
+        starCheckedAt: Date.now()
+      };
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await storage.mergeRepoCache(patch);
+    }
+  }
+
+  async function ensureStarDatesReady() {
+    if (state.starDatesReady || !Array.isArray(state.cards) || state.cards.length === 0) {
+      return;
+    }
+
+    await hydrateStarDates(state.cards);
+    state.repoCache = await storage.getRepoCacheEntries(state.cards.map((card) => card.key));
+    state.starDatesReady = true;
+
+    if (state.settings?.showStarDate) {
+      for (const card of state.cards) {
+        renderCardMeta(card, state.repoCache?.[card.key] || {});
+      }
+    }
+  }
+
+  function extractSearchableText(card, cacheEntry) {
+    const listNames = (cacheEntry?.lists || []).map((item) => item.name).join(" ");
+    return `${card.owner} ${card.repo} ${card.description} ${listNames}`.toLowerCase();
+  }
+
+  function collectMatchedKeywords(text, rule) {
+    const matched = [];
+    for (const keyword of rule.keywords) {
+      if (text.includes(keyword) && !matched.includes(keyword)) {
+        matched.push(keyword);
+      }
+      if (matched.length >= 3) {
+        break;
+      }
+    }
+    return matched;
+  }
+
+  function classifyThemeSuggestion(card, cacheEntry) {
+    const text = extractSearchableText(card, cacheEntry);
+    if (!text) {
+      return null;
+    }
+
+    let bestMatch = null;
+    for (const rule of THEME_RULES) {
+      if (rule.excludes.some((keyword) => text.includes(keyword))) {
+        continue;
+      }
+
+      const matchedKeywords = collectMatchedKeywords(text, rule);
+      const score = matchedKeywords.length;
+      if (score < 2) {
+        continue;
+      }
+
+      if (!bestMatch || score > bestMatch.score) {
+        bestMatch = {
+          id: rule.id,
+          name: rule.name,
+          score,
+          matchedKeywords
+        };
+      }
+    }
+
+    if (!bestMatch) {
+      return null;
+    }
+
+    return {
+      ...bestMatch,
+      version: THEME_SUGGESTION_VERSION,
+      updatedAt: Date.now()
+    };
+  }
+
+  async function hydrateThemeSuggestions(cards) {
+    if (!Array.isArray(cards) || cards.length === 0) {
+      return state.repoCache || {};
+    }
+
+    const patch = {};
+    const version = Number(state.settings?.themeSuggestionVersion || THEME_SUGGESTION_VERSION);
+
+    for (const card of cards) {
+      const cacheEntry = state.repoCache?.[card.key] || {};
+      const existing = cacheEntry.themeSuggestion;
+      if (existing?.version === version) {
+        continue;
+      }
+
+      patch[card.key] = {
+        ...cacheEntry,
+        themeSuggestion: classifyThemeSuggestion(card, cacheEntry)
+      };
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return state.repoCache || {};
+    }
+
+    await storage.mergeRepoCache(patch);
+    state.repoCache = {
+      ...(state.repoCache || {}),
+      ...patch
+    };
+    return state.repoCache;
+  }
+
+  function readCardStarTimestamp(card) {
+    const timestamp = new Date(state.repoCache?.[card.key]?.starredAt || card.domStarredAt || 0).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  function compareCardsByActiveSort(left, right) {
+    if (state.view.sort === "star-desc" || state.view.sort === "star-asc") {
+      const leftValue = readCardStarTimestamp(left);
+      const rightValue = readCardStarTimestamp(right);
+
+      if (leftValue !== rightValue) {
+        return state.view.sort === "star-asc"
+          ? leftValue - rightValue
+          : rightValue - leftValue;
+      }
+    }
+
+    return (left.domOrder || 0) - (right.domOrder || 0);
+  }
+
+  function sortCardsInDom() {
+    if (!Array.isArray(state.cards) || state.cards.length === 0) {
+      return;
+    }
+
+    const cardsByParent = new Map();
+    for (const card of state.cards) {
+      const parent = card.root?.parentElement;
+      if (!parent) {
+        continue;
+      }
+
+      if (!cardsByParent.has(parent)) {
+        cardsByParent.set(parent, []);
+      }
+      cardsByParent.get(parent).push(card);
+    }
+
+    for (const [parent, cards] of cardsByParent.entries()) {
+      const originalCards = [...cards].sort((left, right) => (left.domOrder || 0) - (right.domOrder || 0));
+      const boundary = originalCards[originalCards.length - 1]?.root?.nextSibling || null;
+      const sortedCards = [...cards].sort(compareCardsByActiveSort);
+
+      for (const card of sortedCards) {
+        parent.insertBefore(card.root, boundary);
+      }
+    }
+  }
+
+  function applyCardFilters() {
+    const filterMode = state.view.filter;
+    const cards = [...state.cards];
+
+    for (const card of cards) {
+      const cacheEntry = state.repoCache?.[card.key] || {};
+      const listCount = getCardListCount(cacheEntry);
+      const themeId = cacheEntry?.themeSuggestion?.id || "";
+      let visible = true;
+
+      if (filterMode === "ungrouped") {
+        visible = listCount === 0;
+      } else if (filterMode === "theme:unknown") {
+        visible = !themeId;
+      } else if (filterMode.startsWith("theme:")) {
+        visible = themeId === filterMode.slice("theme:".length);
+      }
+
+      card.root.classList.toggle("github-star-lists-plus-hidden", !visible);
+      card.root.hidden = !visible;
+      card.root.setAttribute("aria-hidden", String(!visible));
+    }
+
+    sortCardsInDom();
+  }
+
+  function findTopControlsMount() {
+    const searchInput = document.querySelector(
+      "input[name='q'], input[data-test-selector='stars-repo-filter'], input[id*='-filter'], input[placeholder*='Search stars' i], input[aria-label*='Search stars' i], input[type='search'][placeholder*='Search' i]"
+    );
+    const searchForm = searchInput?.closest("form");
+    if (searchInput) {
+      const scopes = [];
+      let cursor = searchForm?.parentElement || searchInput.parentElement;
+
+      while (cursor && cursor !== document.body && scopes.length < 6) {
+        scopes.push(cursor);
+        cursor = cursor.parentElement;
+      }
+
+      for (const scope of scopes) {
+        const sortCandidates = [...scope.querySelectorAll("button, summary")].filter((element) => {
+          const text = normalizeText(
+            `${element.textContent || ""} ${element.getAttribute("aria-label") || ""} ${element.getAttribute("title") || ""}`
+          ).toLowerCase();
+          return text.includes("sort");
+        });
+
+        if (sortCandidates.length === 0) {
+          continue;
+        }
+
+        const sortTrigger = sortCandidates
+          .sort((left, right) => scoreStarsMenuTrigger(right, "sort", scope) - scoreStarsMenuTrigger(left, "sort", scope))[0];
+        const container = sortTrigger?.parentElement || scope;
+        if (container) {
+          return {
+            container,
+            before: sortTrigger
+          };
+        }
+      }
+    }
+
+    const sortButton = document.querySelector("#stars-sort-menu-button, button[id*='sort-menu-button'], details summary");
+    const container = sortButton?.closest(".d-flex.flex-justify-end, .d-flex.flex-wrap, .subnav, form") || null;
+    let before = null;
+    if (container && sortButton) {
+      let cursor = sortButton;
+      while (cursor && cursor.parentElement !== container) {
+        cursor = cursor.parentElement;
+      }
+      before = cursor || null;
+    }
+
+    return {
+      container,
+      before
+    };
+  }
+
+  function getDefaultStarsFilter() {
+    return "all";
+  }
+
+  function normalizeStarsFilterValue(filterValue) {
+    const nextValue = String(filterValue || "").trim();
+    if (!nextValue || nextValue === getDefaultStarsFilter()) {
+      return getDefaultStarsFilter();
+    }
+    if (nextValue === "ungrouped" || nextValue === "theme:unknown") {
+      return nextValue;
+    }
+    if (nextValue.startsWith("theme:")) {
+      const themeId = nextValue.slice("theme:".length);
+      return THEME_RULES.some((rule) => rule.id === themeId)
+        ? nextValue
+        : getDefaultStarsFilter();
+    }
+    return getDefaultStarsFilter();
+  }
+
+  function readStarsViewFromUrl() {
+    const url = new URL(location.href);
+    const sortValue = url.searchParams.get(STARS_VIEW_QUERY_KEYS.sort) || "";
+    const rawFilterValue = url.searchParams.get(STARS_VIEW_QUERY_KEYS.filter) || "";
+    const filterValue = normalizeStarsFilterValue(rawFilterValue);
+
+    return {
+      sort: CUSTOM_STARS_SORT_MODES.has(sortValue) ? sortValue : "default",
+      filter: filterValue,
+      hasCustomFilter: filterValue !== getDefaultStarsFilter()
+    };
+  }
+
+  function syncStarsViewToUrl() {
+    const url = new URL(location.href);
+    const defaultFilter = getDefaultStarsFilter();
+    const activeFilter = currentListIdentity() ? "all" : (state.view.filter || "all");
+
+    if (state.view.sort === "default") {
+      url.searchParams.delete(STARS_VIEW_QUERY_KEYS.sort);
+    } else {
+      url.searchParams.set(STARS_VIEW_QUERY_KEYS.sort, state.view.sort);
+    }
+
+    if (activeFilter === defaultFilter) {
+      url.searchParams.delete(STARS_VIEW_QUERY_KEYS.filter);
+    } else {
+      url.searchParams.set(STARS_VIEW_QUERY_KEYS.filter, activeFilter);
+    }
+
+    const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+    const currentUrl = `${location.pathname}${location.search}${location.hash}`;
+    if (nextUrl !== currentUrl) {
+      history.replaceState(history.state, "", nextUrl);
+      state.lastUrl = location.href;
+    }
+  }
+
+  function syncPaginationLinks() {
+    const defaultFilter = getDefaultStarsFilter();
+    const activeFilter = currentListIdentity() ? "all" : (state.view.filter || "all");
+    const anchors = document.querySelectorAll("a[rel='next'], a[rel='prev'], .paginate-container a, nav[aria-label='Pagination'] a");
+
+    for (const anchor of anchors) {
+      const href = anchor.getAttribute("href");
+      if (!href) {
+        continue;
+      }
+
+      let url;
+      try {
+        url = new URL(href, location.origin);
+      } catch (_error) {
+        continue;
+      }
+
+      if (url.origin !== location.origin) {
+        continue;
+      }
+
+      if (state.view.sort === "default") {
+        url.searchParams.delete(STARS_VIEW_QUERY_KEYS.sort);
+      } else {
+        url.searchParams.set(STARS_VIEW_QUERY_KEYS.sort, state.view.sort);
+      }
+
+      if (activeFilter === defaultFilter) {
+        url.searchParams.delete(STARS_VIEW_QUERY_KEYS.filter);
+      } else {
+        url.searchParams.set(STARS_VIEW_QUERY_KEYS.filter, activeFilter);
+      }
+
+      anchor.href = `${url.pathname}${url.search}${url.hash}`;
+    }
+  }
+
+  function getActiveStarsSortLabel() {
+    if (state.view.sort === "star-desc") {
+      return "Star newest";
+    }
+    if (state.view.sort === "star-asc") {
+      return "Star oldest";
+    }
+    return "";
+  }
+
+  function syncStarsSortTriggerLabel() {
+    const trigger = findStarsMenuTrigger("sort");
+    if (!trigger) {
+      return;
+    }
+
+    const modernLabel = trigger.querySelector(".Button-label");
+    if (modernLabel) {
+      if (!modernLabel.dataset.githubStarListsPlusDefaultLabel) {
+        modernLabel.dataset.githubStarListsPlusDefaultLabel = normalizeText(modernLabel.textContent);
+      }
+
+      modernLabel.textContent = getActiveStarsSortLabel()
+        ? `Sort by: ${getActiveStarsSortLabel()}`
+        : modernLabel.dataset.githubStarListsPlusDefaultLabel;
+      return;
+    }
+
+    const legacyLabel = trigger.querySelector("[data-menu-button]");
+    if (!legacyLabel) {
+      return;
+    }
+
+    if (!legacyLabel.dataset.githubStarListsPlusDefaultLabel) {
+      legacyLabel.dataset.githubStarListsPlusDefaultLabel = normalizeText(legacyLabel.textContent);
+    }
+
+    legacyLabel.textContent = getActiveStarsSortLabel() || legacyLabel.dataset.githubStarListsPlusDefaultLabel;
+  }
+
+  function resolveStarsViewButtonMount() {
+    const mount = findTopControlsMount();
+    if (!mount?.container) {
+      return null;
+    }
+
+    const sortTrigger = findStarsMenuTrigger("sort");
+    let before = null;
+    if (sortTrigger) {
+      before = sortTrigger;
+      while (before && before.parentElement !== mount.container) {
+        before = before.parentElement;
+      }
+    }
+
+    return {
+      container: mount.container,
+      before: before || mount.before || null
+    };
+  }
+
+
+
+  function syncStarsFilterButton(button) {
+    const filterValue = normalizeStarsFilterValue(currentListIdentity() ? "all" : state.view.filter);
+    const filterActive = filterValue !== "all";
+    button.classList.toggle("is-active", filterActive);
+    button.setAttribute("aria-pressed", String(filterActive));
+    button.dataset.checked = filterActive ? "true" : "false";
+
+    let nextLabel = "Filter: All";
+    if (filterValue === "ungrouped") {
+      nextLabel = "Filter: Ungrouped";
+    } else if (filterValue === "theme:unknown") {
+      nextLabel = "Filter: Unclassified";
+    } else if (filterValue.startsWith("theme:")) {
+      const themeId = filterValue.slice("theme:".length);
+      const theme = THEME_RULES.find((item) => item.id === themeId);
+      nextLabel = theme ? `Filter: ${theme.name}` : "Filter: All";
+    }
+
+    button.title = nextLabel;
+    const icon = button.querySelector(".github-star-lists-plus-view-button-icon");
+    if (icon) {
+      icon.hidden = !filterActive;
+    }
+
+    const label = button.querySelector(".Button-label");
+    if (label) {
+      label.textContent = nextLabel;
+      return;
+    }
+
+    button.textContent = nextLabel;
+  }
+
+  function ensureStarsFilterButton() {
+    if (currentListIdentity()) {
+      return;
+    }
+
+    const mount = resolveStarsViewButtonMount();
+    if (!mount?.container) {
+      return;
+    }
+
+    let button = mount.container.querySelector("[data-github-star-lists-plus-view-kind='filter']");
+    if (!button) {
+      const nativeTrigger = findStarsMenuTrigger("filter");
+      if (!nativeTrigger) {
+        return;
+      }
+      button = nativeTrigger;
+      button.dataset.githubStarListsPlusViewKind = "filter";
+      button.classList.add("github-star-lists-plus-view-button");
+    }
+
+    syncStarsFilterButton(button);
+  }
+
+  function scoreStarsMenuTrigger(trigger, kind, scopeRoot) {
+    if (!trigger || !isVisible(trigger)) {
+      return -1;
+    }
+
+    const text = normalizeText(
+      `${trigger.textContent || ""} ${trigger.getAttribute("aria-label") || ""} ${trigger.getAttribute("title") || ""}`
+    ).toLowerCase();
+    let score = 0;
+
+    if (kind === "sort") {
+      if (text.includes("sort")) {
+        score += 16;
+      }
+      if (text.includes("recent")) {
+        score += 8;
+      }
+      if (text.includes("star")) {
+        score += 4;
+      }
+    } else {
+      if (text.includes("type")) {
+        score += 16;
+      }
+      if (text.includes("filter")) {
+        score += 12;
+      }
+      if (text.includes("repositories") || text.includes("topics") || text.includes("all")) {
+        score += 4;
+      }
+    }
+
+    if (scopeRoot?.contains(trigger)) {
+      score += 4;
+    }
+    if (trigger.closest("action-menu, details")) {
+      score += 2;
+    }
+
+    return score;
+  }
+
+  function findStarsMenuTrigger(kind) {
+    const mount = findTopControlsMount();
+    const scopes = [mount.container, document].filter(Boolean);
+    const selectors = kind === "sort"
+      ? "#stars-sort-menu-button, button[id*='sort-menu-button'], button[aria-haspopup='menu'], button[aria-haspopup='true'], details summary"
+      : "#stars-type-menu-button, #stars-filter-menu-button, button[id*='type-menu-button'], button[id*='filter-menu-button'], button[aria-haspopup='menu'], button[aria-haspopup='true'], details summary";
+    const seen = new Set();
+    let bestTrigger = null;
+    let bestScore = -1;
+
+    for (const scope of scopes) {
+      for (const candidate of scope.querySelectorAll(selectors)) {
+        if (seen.has(candidate)) {
+          continue;
+        }
+        seen.add(candidate);
+
+        const score = scoreStarsMenuTrigger(candidate, kind, scope);
+        if (score > bestScore) {
+          bestScore = score;
+          bestTrigger = candidate;
+        }
+      }
+    }
+
+    return bestScore >= (kind === "sort" ? 10 : 8) ? bestTrigger : null;
+  }
+
+  function unwrapMenuRoot(container) {
+    if (!container) {
+      return null;
+    }
+    if (container.matches("ul[role='menu'], ul[role='listbox'], [role='menu'], [role='listbox']")) {
+      return container;
+    }
+    return container.querySelector("ul[role='menu'], ul[role='listbox'], [role='menu'], [role='listbox'], details-menu");
+  }
+
+  function getMenuRootFromTrigger(trigger) {
+    const controlledIds = [trigger?.getAttribute("aria-controls"), trigger?.getAttribute("popovertarget")].filter(Boolean);
+
+    for (const id of controlledIds) {
+      const root = unwrapMenuRoot(document.getElementById(id));
+      if (root) {
+        return root;
+      }
+    }
+
+    const actionMenuRoot = unwrapMenuRoot(trigger?.closest("action-menu"));
+    if (actionMenuRoot) {
+      return actionMenuRoot;
+    }
+
+    const detailsRoot = unwrapMenuRoot(trigger?.closest("details[open]"));
+    if (detailsRoot) {
+      return detailsRoot;
+    }
+
+    return null;
+  }
+
+  function findInteractiveMenuElement(item) {
+    if (!item) {
+      return null;
+    }
+    if (item.matches("button, a, [role='menuitemradio'], [role='menuitemcheckbox'], [role='option']")) {
+      return item;
+    }
+    return item.querySelector("button, a, [role='menuitemradio'], [role='menuitemcheckbox'], [role='option']");
+  }
+
+  function findMenuTemplateItem(menuRoot) {
+    const directChildren = [...menuRoot.children].filter((child) => {
+      if (!normalizeText(child.textContent)) {
+        return false;
+      }
+      return child.matches("li, button, a, [role='menuitemradio'], [role='menuitemcheckbox'], [role='option']");
+    });
+    if (directChildren.length > 0) {
+      return directChildren[0];
+    }
+
+    const listItem = [...menuRoot.querySelectorAll("li")].find((item) => Boolean(findInteractiveMenuElement(item)) && normalizeText(item.textContent));
+    if (listItem) {
+      return listItem;
+    }
+
+    return [...menuRoot.querySelectorAll("button, a")].find((item) => normalizeText(item.textContent)) || null;
+  }
+
+  function stripMenuCloneAttributes(root) {
+    const targets = [root, ...root.querySelectorAll("*")];
+    const removableAttributes = [
+      "id",
+      "href",
+      "data-hydro-click",
+      "data-hydro-click-hmac",
+      "data-ga-click",
+      "data-hotkey",
+      "data-selected-links",
+      "aria-current",
+      "aria-describedby"
+    ];
+
+    for (const node of targets) {
+      for (const attribute of removableAttributes) {
+        node.removeAttribute(attribute);
+      }
+    }
+  }
+
+  function setMenuItemLabel(root, label) {
+    const labelNode = root.querySelector(".ActionListItem-label, .SelectMenu-item-text, .Truncate-text")
+      || [...root.querySelectorAll("span, div")].find((element) => normalizeText(element.textContent) && !element.querySelector("svg"));
+
+    if (labelNode) {
+      labelNode.textContent = label;
+      return;
+    }
+
+    const interactive = findInteractiveMenuElement(root) || root;
+    interactive.textContent = label;
+  }
+
+  function setMenuItemSelected(root, selected) {
+    const interactive = findInteractiveMenuElement(root) || root;
+    interactive.setAttribute("aria-checked", String(selected));
+    interactive.setAttribute("aria-selected", String(selected));
+
+    for (const element of root.querySelectorAll(".ActionListItem-singleSelectCheckmark, .octicon-check")) {
+      element.hidden = !selected;
+      element.setAttribute("aria-hidden", String(!selected));
+    }
+  }
+
+  function closeMenuFromTrigger(trigger) {
+    const popoverId = trigger?.getAttribute("popovertarget");
+    const popover = popoverId ? document.getElementById(popoverId) : null;
+    if (popover && typeof popover.hidePopover === "function") {
+      popover.hidePopover();
+      return;
+    }
+
+    const details = trigger?.closest("details[open]");
+    if (details) {
+      details.removeAttribute("open");
+      return;
+    }
+
+    const actionMenu = trigger?.closest("action-menu");
+    if (actionMenu) {
+      trigger.click();
+      return;
+    }
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  }
+
+  function createInjectedMenuItem(templateItem, menuKind, optionKey, label, selected, onSelect) {
+    const root = templateItem.cloneNode(true);
+    stripMenuCloneAttributes(root);
+    root.dataset.githubStarListsPlusMenuKind = menuKind;
+    root.dataset.githubStarListsPlusMenuOption = optionKey;
+    setMenuItemLabel(root, label);
+    setMenuItemSelected(root, selected);
+
+    const interactive = findInteractiveMenuElement(root) || root;
+    if (interactive.tagName === "BUTTON") {
+      interactive.type = "button";
+    }
+    if (interactive.tagName === "A") {
+      interactive.setAttribute("href", "#");
+    }
+
+    const handleSelect = async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      await onSelect();
+    };
+
+    root.addEventListener("click", handleSelect);
+
+    return root;
+  }
+
+  async function applyStarsViewState() {
+    const previousCards = state.cards;
+    state.cards = collectStarCards();
+    if (state.cards.length > 0 && previousCards.length > 0) {
+      const cardsChanged = state.cards.length !== previousCards.length
+        || state.cards.some((card, index) => card.root !== previousCards[index]?.root || card.key !== previousCards[index]?.key);
+      if (cardsChanged) {
+        state.repoCache = await storage.getRepoCacheEntries(state.cards.map((card) => card.key));
+      }
+    }
+    state.view.filterDirty = state.view.filter !== getDefaultStarsFilter();
+    syncStarsViewToUrl();
+    syncPaginationLinks();
+    syncStarsSortTriggerLabel();
+    const filterButton = document.querySelector("[data-github-star-lists-plus-view-kind='filter']");
+    if (filterButton) {
+      syncStarsFilterButton(filterButton);
+    }
+
+    if (state.view.sort !== "default") {
+      await ensureStarDatesReady();
+    }
+
+    injectStarsMenuOptions("filter");
+    applyCardFilters();
+  }
+
+  function injectStarsMenuOptions(kind, attempt = 0) {
+    if (kind === "filter" && currentListIdentity()) {
+      return;
+    }
+
+    const trigger = findStarsMenuTrigger(kind);
+    if (!trigger) {
+      return;
+    }
+
+    const menuRoot = getMenuRootFromTrigger(trigger);
+    if (!menuRoot) {
+      if (attempt < 2) {
+        globalThis.setTimeout(() => injectStarsMenuOptions(kind, attempt + 1), 80);
+      }
+      return;
+    }
+
+    const templateItem = findMenuTemplateItem(menuRoot);
+    const insertParent = templateItem?.parentElement || menuRoot;
+    if (!templateItem || !insertParent) {
+      if (attempt < 2) {
+        globalThis.setTimeout(() => injectStarsMenuOptions(kind, attempt + 1), 80);
+      }
+      return;
+    }
+
+    for (const node of menuRoot.querySelectorAll(`[data-github-star-lists-plus-menu-kind='${kind}']`)) {
+      node.remove();
+    }
+
+    const definitions = kind === "sort"
+      ? [
+          { key: "star-desc", label: "Star newest" },
+          { key: "star-asc", label: "Star oldest" }
+        ]
+      : [
+          { key: "all", label: "All" },
+          { key: "ungrouped", label: "Ungrouped" },
+          ...THEME_RULES.map((rule) => ({ key: `theme:${rule.id}`, label: `Theme: ${rule.name}` })),
+          { key: "theme:unknown", label: "Theme: Unclassified" }
+        ];
+
+    for (const definition of definitions) {
+      const item = createInjectedMenuItem(
+        templateItem,
+        kind,
+        definition.key,
+        definition.label,
+        kind === "sort" ? state.view.sort === definition.key : state.view.filter === definition.key,
+        async () => {
+          if (kind === "sort") {
+            state.view.sort = definition.key;
+          } else {
+            state.view.filter = definition.key;
+          }
+
+          await applyStarsViewState();
+          closeMenuFromTrigger(trigger);
+        }
+      );
+      insertParent.appendChild(item);
+    }
+  }
+
+  function bindStarsMenuTrigger(kind) {
+    const trigger = findStarsMenuTrigger(kind);
+    if (!trigger || trigger.dataset.githubStarListsPlusBound === kind) {
+      return;
+    }
+
+    const scheduleSync = () => {
+      globalThis.requestAnimationFrame(() => {
+        globalThis.setTimeout(() => injectStarsMenuOptions(kind), 0);
+      });
+    };
+
+    trigger.dataset.githubStarListsPlusBound = kind;
+    trigger.addEventListener("click", scheduleSync);
+    trigger.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        scheduleSync();
+      }
+    });
+  }
+
+  function ensureStarsViewMenus() {
+    bindStarsMenuTrigger("sort");
+    bindStarsMenuTrigger("filter");
+    ensureStarsFilterButton();
+    syncStarsSortTriggerLabel();
+    syncPaginationLinks();
+  }
+
+  function findRepositoryDateHost() {
+    return document.querySelector(".github-star-lists-plus-repo-date");
+  }
+
+  function clearRepositoryDateHosts() {
+    for (const host of document.querySelectorAll(".github-star-lists-plus-repo-date")) {
+      host.remove();
+    }
+  }
+
+  function findRepositoryDateAnchor(slot, control) {
+    const publicBadge = slot.querySelector(".Label.Label--secondary");
+    if (publicBadge) {
+      return publicBadge;
+    }
+
+    const directCandidates = [control.container, control.form, control.button].filter(Boolean);
+
+    for (const candidate of directCandidates) {
+      if (candidate.parentElement === slot) {
+        return candidate;
+      }
+
+      if (!slot.contains(candidate)) {
+        continue;
+      }
+
+      let cursor = candidate;
+      while (cursor && cursor.parentElement !== slot) {
+        cursor = cursor.parentElement;
+      }
+      if (cursor) {
+        return cursor;
+      }
+    }
+
+    return null;
+  }
+
+  function resolveRepositoryDateMount(control) {
+    const slot = control.button?.closest("li")
+      || control.form?.closest("li")
+      || control.container?.closest("li")
+      || control.container
+      || control.form?.parentElement
+      || control.button?.parentElement
+      || null;
+
+    if (!slot) {
+      return null;
+    }
+
+    return {
+      slot,
+      anchor: findRepositoryDateAnchor(slot, control)
+    };
+  }
+
+  function ensureRepositoryDateHost(control) {
+    const mount = resolveRepositoryDateMount(control);
+    if (!mount?.slot) {
+      return null;
+    }
+
+    let host = [...mount.slot.children].find((element) => element.classList?.contains("github-star-lists-plus-repo-date")) || null;
+    if (!host) {
+      host = document.createElement("div");
+      host.className = "github-star-lists-plus-repo-date";
+      if (mount.anchor?.parentElement === mount.slot) {
+        mount.slot.insertBefore(host, mount.anchor.nextSibling);
+      } else {
+        mount.slot.appendChild(host);
+      }
+    }
+
+    return host;
+  }
+
+  function resolveRepositoryDateContainer(form, button, fallbackElement) {
+    const candidates = [
+      button?.closest(".BtnGroup-parent"),
+      form?.closest(".BtnGroup-parent"),
+      button?.closest("li"),
+      form?.closest("li"),
+      button?.closest(".js-social-container"),
+      form?.closest(".js-social-container"),
+      button?.closest("[data-testid='repository-actions']"),
+      form?.closest("[data-testid='repository-actions']"),
+      button?.parentElement,
+      form?.parentElement,
+      fallbackElement?.closest?.("li, div, span") || null,
+      fallbackElement
+    ].filter(Boolean);
+
+    return candidates[0] || null;
+  }
+
+  function scoreRepositoryStarControl(candidate, repoNwo) {
+    const repoPath = `/${String(repoNwo || "").toLowerCase()}/`;
+    const formAction = String(candidate.form?.action || "").toLowerCase();
+    const ariaLabel = normalizeText(candidate.button?.getAttribute("aria-label") || "").toLowerCase();
+    const buttonText = normalizeText(candidate.button?.textContent || "").toLowerCase();
+
+    let score = 0;
+    if (formAction.includes(repoPath)) {
+      score += 28;
+    }
+    if (candidate.form) {
+      score += 6;
+    }
+    if (/star this repository|unstar this repository/.test(ariaLabel)) {
+      score += 12;
+    }
+    if (/star a repository/.test(ariaLabel)) {
+      score += 6;
+    }
+    if (/\bstar\b|\bstarred\b|\bunstar\b/.test(buttonText)) {
+      score += 8;
+    }
+    if (candidate.button?.closest(".gh-header-actions, .Layout-sidebar, .js-social-container, [data-testid='repository-actions']")) {
+      score += 10;
+    }
+    if (candidate.container?.matches?.(".BtnGroup-parent, .js-social-container, li")) {
+      score += 4;
+    }
+
+    return score;
+  }
+
+  function closeBatchListPanel() {
+    document.querySelector(".github-star-lists-plus-batch-panel")?.remove();
+
+    if (typeof state.batchPanelCleanup === "function") {
+      state.batchPanelCleanup();
+      state.batchPanelCleanup = null;
+    }
+
+    const toolbar = document.querySelector(".github-star-lists-plus-batch-toolbar");
+    if (!toolbar) {
+      return;
+    }
+
+    toolbar.classList.remove("has-panel");
+    delete toolbar.dataset.batchMode;
+    for (const button of toolbar.querySelectorAll("button[data-action='add-lists'], button[data-action='remove-lists']")) {
+      button.dataset.active = "false";
+    }
+  }
+
+  function buildListEntry(action, fallbackItem) {
+    const listId = action?.id || fallbackItem?.id || "";
+    return {
+      id: listId,
+      name: action?.name || fallbackItem?.name || listId,
+      url: action?.url || fallbackItem?.url || `https://github.com/stars?list=${encodeURIComponent(listId)}`
+    };
+  }
+
+  function countSelectedReposInList(listId) {
+    let count = 0;
+
+    for (const repoKey of state.selectedKeys) {
+      const items = state.repoCache?.[repoKey]?.lists || [];
+      if (items.some((item) => item.id === listId)) {
+        count += 1;
+      }
+    }
+
+    return count;
+  }
+
+  async function applyBatchListChanges(repoKeys, listIds, mode) {
+    const targetChecked = mode === "add";
+    const listCatalogMap = new Map((state.listCatalog || []).map((item) => [item.id, item]));
+    const patch = {};
+    const succeededKeys = [];
+    const failedKeys = [];
+    const updatedAt = Date.now();
+
+    for (const repoKey of repoKeys) {
+      const card = findCardByKey(repoKey);
+      if (!card) {
+        failedKeys.push(repoKey);
+        continue;
+      }
+
+      const actions = await discoverListActions(card.root);
+      if (actions.length === 0) {
+        failedKeys.push(repoKey);
+        continue;
+      }
+
+      const actionMap = new Map(actions.map((action) => [action.id, action]));
+      let nextLists = Array.isArray(state.repoCache?.[repoKey]?.lists)
+        ? state.repoCache[repoKey].lists.map((item) => ({ ...item }))
+        : [];
+      let repoFailed = false;
+
+      for (const listId of listIds) {
+        const action = actionMap.get(listId);
+        const fallbackItem = listCatalogMap.get(listId);
+        const hadList = nextLists.some((item) => item.id === listId);
+
+        if (!action) {
+          const alreadyMatches = targetChecked ? hadList : !hadList;
+          if (!alreadyMatches) {
+            repoFailed = true;
+          }
+          continue;
+        }
+
+        if (action.checked !== targetChecked) {
+          try {
+            await submitToggleAction(action);
+          } catch (_error) {
+            repoFailed = true;
+            continue;
+          }
+        }
+
+        if (targetChecked) {
+          nextLists = dedupeBy([...nextLists, buildListEntry(action, fallbackItem)], (item) => item.id);
+        } else {
+          nextLists = nextLists.filter((item) => item.id !== listId);
+        }
+      }
+
+      patch[repoKey] = {
+        ...(state.repoCache?.[repoKey] || {}),
+        lists: nextLists,
+        listCheckedAt: updatedAt
+      };
+
+      if (repoFailed) {
+        failedKeys.push(repoKey);
+      } else {
+        succeededKeys.push(repoKey);
+      }
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await storage.mergeRepoCache(patch);
+      state.repoCache = {
+        ...(state.repoCache || {}),
+        ...patch
+      };
+
+      for (const repoKey of Object.keys(patch)) {
+        const card = findCardByKey(repoKey);
+        if (card) {
+          renderCardMeta(card, state.repoCache[repoKey] || {});
+        }
+      }
+
+      applyCardFilters();
+    }
+
+    return {
+      succeededKeys,
+      failedKeys
+    };
+  }
+
+  function openBatchListPanel(mode) {
+    const toolbar = ensureBatchToolbar();
+    if (state.selectedKeys.size === 0) {
+      return;
+    }
+
+    if (!Array.isArray(state.listCatalog) || state.listCatalog.length === 0) {
+      return;
+    }
+
+    if (toolbar.dataset.batchMode === mode) {
+      closeBatchListPanel();
+      return;
+    }
+
+    closeBatchListPanel();
+
+    const panel = document.createElement("div");
+
+    function readSelectedRepoKeys() {
+      return [...state.selectedKeys];
+    }
+    panel.className = "github-star-lists-plus-batch-panel";
+    panel.innerHTML = `
+      <div class="github-star-lists-plus-repo-panel-head">
+        <strong>${mode === "add" ? "Add to lists" : "Remove from lists"}</strong>
+        <button class="Button Button--secondary Button--small" type="button" data-action="close"><span class="Button-content"><span class="Button-label">Close</span></span></button>
+      </div>
+      <input type="search" class="github-star-lists-plus-batch-search" placeholder="Search list name">
+      <div class="github-star-lists-plus-repo-selected"></div>
+      <div class="github-star-lists-plus-repo-options"></div>
+      <div class="github-star-lists-plus-batch-note" aria-live="polite"></div>
+      <div class="github-star-lists-plus-repo-actions">
+        <button class="Button Button--secondary Button--small" type="button" data-action="apply"><span class="Button-content"><span class="Button-label">${mode === "add" ? "Add" : "Remove"} ${state.selectedKeys.size} repositories</span></span></button>
+      </div>
+    `;
+    toolbar.appendChild(panel);
+    toolbar.classList.add("has-panel");
+    toolbar.dataset.batchMode = mode;
+
+    const toggleButton = toolbar.querySelector(`button[data-action='${mode === "add" ? "add-lists" : "remove-lists"}']`);
+    if (toggleButton) {
+      toggleButton.dataset.active = "true";
+    }
+
+    const options = state.listCatalog.map((item) => ({
+      ...item,
+      checked: false,
+      presentCount: countSelectedReposInList(item.id)
+    }));
+    const selectedHost = panel.querySelector(".github-star-lists-plus-repo-selected");
+    const optionsHost = panel.querySelector(".github-star-lists-plus-repo-options");
+    const searchInput = panel.querySelector(".github-star-lists-plus-batch-search");
+    const note = panel.querySelector(".github-star-lists-plus-batch-note");
+    const applyButton = panel.querySelector("button[data-action='apply']");
+
+    function renderOptions() {
+      for (const option of options) {
+        option.presentCount = countSelectedReposInList(option.id);
+      }
+
+      const query = searchInput.value.trim().toLowerCase();
+      const visibleOptions = options.filter((option) => option.name.toLowerCase().includes(query));
+      optionsHost.innerHTML = visibleOptions.length > 0
+        ? visibleOptions
+            .map((option) => `
+              <label class="github-star-lists-plus-repo-option ${option.checked ? "is-checked" : ""}">
+                <input data-list-id="${escapeHtml(option.id)}" type="checkbox" ${option.checked ? "checked" : ""}>
+                <span class="github-star-lists-plus-batch-copy">
+                  <strong>${escapeHtml(option.name)}</strong>
+                  <small>${option.presentCount}/${readSelectedRepoKeys().length} selected repositories ${mode === "add" ? "are already in this list" : "are in this list"}</small>
+                </span>
+              </label>
+            `)
+            .join("")
+        : `<div class="github-star-lists-plus-batch-empty">No matching lists</div>`;
+
+      selectedHost.innerHTML = options
+        .filter((option) => option.checked)
+        .map((option) => `<span class="github-star-lists-plus-badge">${escapeHtml(option.name)}</span>`)
+        .join("") || `<span class="github-star-lists-plus-badge is-empty">No list selected</span>`;
+
+      for (const option of optionsHost.querySelectorAll("input[type='checkbox']")) {
+        option.addEventListener("change", () => {
+          const item = options.find((entry) => entry.id === option.dataset.listId);
+          if (!item) {
+            return;
+          }
+          item.checked = option.checked;
+          renderOptions();
+        });
+      }
+
+      applyButton.disabled = state.selectedKeys.size === 0 || options.every((option) => !option.checked);
+      applyButton.innerHTML = `<span class="Button-content"><span class="Button-label">${mode === "add" ? "Add" : "Remove"} ${state.selectedKeys.size} repositories</span></span>`;
+    }
+
+    searchInput.addEventListener("input", renderOptions);
+    panel.querySelector("button[data-action='close']").addEventListener("click", closeBatchListPanel);
+    renderOptions();
+
+    applyButton.addEventListener("click", async () => {
+      const selectedListIds = options.filter((option) => option.checked).map((option) => option.id);
+      if (selectedListIds.length === 0) {
+        return;
+      }
+
+      applyButton.disabled = true;
+      applyButton.innerHTML = `<span class="Button-content"><span class="Button-label">${mode === "add" ? "Adding..." : "Removing..."}</span></span>`;
+      note.textContent = "";
+      delete note.dataset.tone;
+
+      try {
+        const result = await applyBatchListChanges(readSelectedRepoKeys(), selectedListIds, mode);
+        if (result.succeededKeys.length > 0) {
+          setSelectionForKeys(result.succeededKeys, false);
+        }
+
+        syncBatchToolbar();
+
+        if (result.failedKeys.length > 0) {
+          note.dataset.tone = "error";
+          note.textContent = `${result.succeededKeys.length} repositories updated. ${result.failedKeys.length} repositories need another try.`;
+          applyButton.disabled = false;
+          applyButton.innerHTML = `<span class="Button-content"><span class="Button-label">${mode === "add" ? "Add" : "Remove"} ${state.selectedKeys.size} repositories</span></span>`;
+          renderOptions();
+          return;
+        }
+
+        closeBatchListPanel();
+      } catch (error) {
+        note.dataset.tone = "error";
+        note.textContent = error.message || String(error);
+        applyButton.disabled = false;
+        applyButton.innerHTML = `<span class="Button-content"><span class="Button-label">${mode === "add" ? "Add" : "Remove"} ${state.selectedKeys.size} repositories</span></span>`;
+      }
+    });
+
+    const clickAway = (event) => {
+      if (!toolbar.contains(event.target)) {
+        closeBatchListPanel();
+      }
+    };
+
+    document.addEventListener("mousedown", clickAway, true);
+    state.batchPanelCleanup = () => {
+      document.removeEventListener("mousedown", clickAway, true);
+    };
+  }
+
+  function ensureBatchToolbar() {
+    let toolbar = document.querySelector(".github-star-lists-plus-batch-toolbar");
+    if (toolbar) {
+      return toolbar;
+    }
+
+    toolbar = document.createElement("div");
+    toolbar.className = "github-star-lists-plus-batch-toolbar";
+    toolbar.innerHTML = `
+      <span data-role="count">0 selected</span>
+      <button class="Button Button--secondary Button--small" data-action="add-lists" type="button"><span class="Button-content"><span class="Button-label">Add to lists</span></span></button>
+      <button class="Button Button--secondary Button--small" data-action="remove-lists" type="button"><span class="Button-content"><span class="Button-label">Remove from lists</span></span></button>
+      <button class="Button Button--secondary Button--small" data-action="unstar" type="button"><span class="Button-content"><span class="Button-label">Bulk Unstar</span></span></button>
+      <button class="Button Button--secondary Button--small" data-action="clear" type="button"><span class="Button-content"><span class="Button-label">Clear Selection</span></span></button>
+    `;
+    document.body.appendChild(toolbar);
+
+    toolbar.querySelector("button[data-action='clear']").addEventListener("click", () => {
+      closeBatchListPanel();
+      state.selectedKeys.clear();
+      for (const card of state.cards) {
+        updateCardSelection(card);
+      }
+      syncBatchToolbar();
+    });
+
+    toolbar.querySelector("button[data-action='add-lists']").addEventListener("click", () => {
+      openBatchListPanel("add");
+    });
+
+    toolbar.querySelector("button[data-action='remove-lists']").addEventListener("click", () => {
+      openBatchListPanel("remove");
+    });
+
+    toolbar.querySelector("button[data-action='unstar']").addEventListener("click", async () => {
+      const repoKeys = [...state.selectedKeys];
+      if (repoKeys.length === 0) {
+        return;
+      }
+
+      closeBatchListPanel();
+      const actionButton = toolbar.querySelector("button[data-action='unstar']");
+      actionButton.disabled = true;
+      actionButton.innerHTML = `<span class="Button-content"><span class="Button-label">Processing...</span></span>`;
+
+      try {
+        const response = await sendRuntimeMessage({
+          type: core.MESSAGE_TYPES.bulkUnstar,
+          repoKeys
+        });
+
+        if (!response?.ok || response?.data?.failures?.length) {
+          throw new Error("Some unstars failed, check PAT or login status");
+        }
+
+        for (const repoKey of repoKeys) {
+          const card = findCardByKey(repoKey);
+          card?.root?.remove();
+        }
+        state.cards = state.cards.filter((card) => !repoKeys.includes(card.key));
+        state.selectedKeys.clear();
+        syncBatchToolbar();
+      } catch (error) {
+        console.error("GitHub StarLists++ bulk unstar failed", error);
+      } finally {
+        actionButton.disabled = false;
+        actionButton.innerHTML = `<span class="Button-content"><span class="Button-label">Bulk Unstar</span></span>`;
+      }
+    });
+
+    return toolbar;
+  }
+
+  function watchStarsMutations() {
+    const main = document.querySelector("main");
+    if (!main) {
+      return;
+    }
+
+    const observer = new MutationObserver(core.debounce(() => {
+      if (!isStarsPage()) {
+        return;
+      }
+
+      const nextCards = collectStarCards();
+      const missingViewControls = !currentListIdentity()
+        && (!findStarsMenuTrigger("sort") || !document.querySelector("[data-github-star-lists-plus-view-kind='filter']"));
+      const cardRootsChanged = nextCards.length === state.cards.length
+        && nextCards.some((card, index) => card.root !== state.cards[index]?.root || card.key !== state.cards[index]?.key);
+      if (nextCards.length === 0 || (nextCards.length === state.cards.length && !missingViewControls && !cardRootsChanged)) {
+        return;
+      }
+
+      setupStarsPage().catch((error) => {
+        console.error("GitHub StarLists++ stars rerender failed", error);
+      });
+    }, 160));
+
+    observer.observe(main, {
+      childList: true,
+      subtree: true
+    });
+
+    state.pageObserver = observer;
+  }
+
+  async function setupStarsPage() {
+    state.settings = await storage.getSettings();
+    state.cards = collectStarCards();
+    if (state.cards.length === 0) {
+      watchStarsMutations();
+      state.pageCleanup = () => {};
+      return;
+    }
+
+    const listCatalog = await loadListCatalog();
+    state.listCatalog = listCatalog;
+    const routeView = readStarsViewFromUrl();
+    state.view.sort = routeView.sort;
+    state.view.filter = currentListIdentity()
+      ? "all"
+      : routeView.filter;
+    state.view.filterDirty = routeView.hasCustomFilter;
+    syncStarsViewToUrl();
+    const hasBatchTargets = Boolean(state.settings.enableBatchSelection) && state.cards.some((card) => Boolean(card.starForm));
+
+    for (const [index, card] of state.cards.entries()) {
+      if (hasBatchTargets) {
+        ensureSelectionControl(card, index);
+      }
+      updateCardSelection(card);
+    }
+
+    ensureStarsViewMenus();
+    if (hasBatchTargets) {
+      ensureBatchToolbar();
+    }
+
+    state.repoCache = await hydrateRepoLists(state.cards, listCatalog);
+    await hydrateThemeSuggestions(state.cards);
+
+    for (const card of state.cards) {
+      renderCardMeta(card, state.repoCache?.[card.key] || {});
+    }
+
+    if (state.settings.showStarDate || state.view.sort !== "default") {
+      await ensureStarDatesReady();
+    }
+
+    syncStarsViewToUrl();
+    syncPaginationLinks();
+    applyCardFilters();
+    watchStarsMutations();
+    syncBatchToolbar();
+    state.pageCleanup = () => {
+      document.querySelector(".github-star-lists-plus-batch-toolbar")?.remove();
+    };
+  }
+
+  function pickVisibleStarControl(repoNwo) {
+    const [owner, repo] = repoNwo.split("/");
+    const selectors = [
+      `form[action*='/${owner}/${repo}/star']`,
+      `form[action*='/${owner}/${repo}/unstar']`,
+      `a[aria-label*='star a repository' i]`,
+      `a[aria-label*='unstar this repository' i]`,
+      `button[aria-label*='star this repository' i]`,
+      `button[aria-label*='unstar this repository' i]`,
+      `[data-testid='star-button']`,
+      `button[data-testid*='star' i]`,
+      `[role='button'][data-testid*='star' i]`
+    ];
+    const seen = new Set();
+    const candidates = [];
+
+    for (const selector of selectors) {
+      for (const element of document.querySelectorAll(selector)) {
+        if (seen.has(element) || !isVisible(element)) {
+          continue;
+        }
+        seen.add(element);
+
+        const form = element.closest("form") || (element.tagName === "FORM" ? element : null);
+        const button = element.matches("button, input[type='submit'], [aria-label], [data-testid]") ? element : form?.querySelector("button, input[type='submit']");
+        const container = resolveRepositoryDateContainer(form, button, element);
+        candidates.push({
+          form,
+          button,
+          container,
+          score: 0
+        });
+      }
+    }
+
+    for (const candidate of candidates) {
+      candidate.score = scoreRepositoryStarControl(candidate, repoNwo);
+    }
+
+    candidates.sort((left, right) => right.score - left.score);
+    return candidates[0] || null;
+  }
+
+  function isRepositoryStarred(control) {
+    const buttonText = normalizeText(control.button?.textContent || "");
+    const ariaLabel = normalizeText(control.button?.getAttribute("aria-label") || "");
+    return control.form?.action?.includes("/unstar")
+      || control.button?.getAttribute("aria-pressed") === "true"
+      || /starred/i.test(buttonText)
+      || /\bunstar\b/i.test(ariaLabel);
+  }
+
+  async function lookupRepositoryStarDate(repoKey) {
+    const cacheEntries = await storage.getRepoCacheEntries([repoKey]);
+    let starredAt = cacheEntries[repoKey]?.starredAt || "";
+
+    if (!starredAt) {
+      try {
+        const response = await sendRuntimeMessage({
+          type: core.MESSAGE_TYPES.getStarMetadata,
+          repoKeys: [repoKey],
+          pageHint: 1,
+          username: getTargetStarsUser()
+        });
+        starredAt = response?.data?.[repoKey] || "";
+        if (starredAt) {
+          await storage.mergeRepoCache({
+            [repoKey]: { ...(cacheEntries[repoKey] || {}), starredAt, starCheckedAt: Date.now() }
+          });
+        }
+      } catch (_error) {}
+    }
+
+    if (!starredAt) {
+      starredAt = await fetchStarDateFromStarsSearch(repoKey, getTargetStarsUser());
+      if (starredAt) {
+        await storage.mergeRepoCache({
+          [repoKey]: { ...(cacheEntries[repoKey] || {}), starredAt, starCheckedAt: Date.now() }
+        });
+      }
+    }
+
+    return starredAt;
+  }
+
+  function renderRepositoryStarDate(control, starredAt, lookupStatus) {
+    const dateBadge = ensureRepositoryDateHost(control);
+    if (!dateBadge) {
+      return null;
+    }
+
+    if (starredAt) {
+      dateBadge.innerHTML = [
+        '<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" class="github-star-lists-plus-repo-date-star">',
+        '<path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path>',
+        '</svg>',
+        `<span>Starred at ${escapeHtml(core.formatStarDate(starredAt))}</span>`
+      ].join("");
+    } else {
+      dateBadge.textContent = "";
+    }
+    dateBadge.dataset.starState = isRepositoryStarred(control) ? "starred" : "unstarred";
+    dateBadge.dataset.lookupStatus = lookupStatus;
+    return dateBadge;
+  }
+
+  function renderRepositoryChips(wrapper, repoCacheEntry) {
+    let chips = wrapper.querySelector(".github-star-lists-plus-repo-chips");
+    if (!chips) {
+      chips = document.createElement("div");
+      chips.className = "github-star-lists-plus-repo-chips";
+      wrapper.appendChild(chips);
+    }
+
+    const items = repoCacheEntry?.lists || [];
+    chips.innerHTML = items.length > 0
+      ? items
+          .map((item) => `<a class="github-star-lists-plus-badge" href="${escapeHtml(item.url)}">${escapeHtml(item.name)}</a>`)
+          .join("")
+      : `<span class="github-star-lists-plus-badge is-empty">Ungrouped</span>`;
+  }
+
+
+
+  function serializeFormFields(form) {
+    const payload = [];
+    const fieldList = [...form.querySelectorAll("input[name], textarea[name], select[name]")];
+    for (const field of fieldList) {
+      if ((field.type === "checkbox" || field.type === "radio") && !field.checked) {
+        continue;
+      }
+      payload.push([field.name, field.value]);
+    }
+
+    const submitButton = form.querySelector("button[name], input[type='submit'][name]");
+    if (submitButton?.name) {
+      payload.push([submitButton.name, submitButton.value || ""]);
+    }
+
+    return payload;
+  }
+
+  function extractActionName(container) {
+    const text = container?.textContent?.replace(/\s+/g, " ").trim() || "";
+    return text.replace(/selected/gi, "").trim();
+  }
+
+  function detectCheckedState(container, form) {
+    if (container?.getAttribute("aria-checked") === "true") {
+      return true;
+    }
+    if (form.querySelector("input[type='checkbox']:checked")) {
+      return true;
+    }
+    return Boolean(container?.querySelector("svg.octicon-check, .octicon-check"));
+  }
+
+  function normalizeActionId(name) {
+    return String(name || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-");
+  }
+
+  function extractListActionsFromPanel(panel) {
+    const forms = [...panel.querySelectorAll("form")];
+    const actions = [];
+
+    for (const form of forms) {
+      const row = form.closest("label, li, [role='menuitemcheckbox'], div, button") || form;
+      const name = extractActionName(row);
+      if (!name || /create list|lists?/i.test(name) && name.trim().toLowerCase() === "lists") {
+        continue;
+      }
+
+      const actionUrl = form.action || form.getAttribute("action") || "";
+      if (!actionUrl) {
+        continue;
+      }
+
+      actions.push({
+        id: normalizeActionId(name),
+        name,
+        checked: detectCheckedState(row, form),
+        method: (form.method || "post").toUpperCase(),
+        actionUrl: new URL(actionUrl, location.origin).toString(),
+        payload: serializeFormFields(form),
+        url: `https://github.com/stars?list=${encodeURIComponent(normalizeActionId(name))}`
+      });
+    }
+
+    return dedupeBy(actions, (item) => item.id);
+  }
+
+  function scoreNativeListTrigger(element, scopeRoot, excludedElements) {
+    if (!element || excludedElements.has(element) || !isVisible(element)) {
+      return -1;
+    }
+
+    const text = [
+      element.textContent,
+      element.getAttribute("aria-label"),
+      element.getAttribute("title")
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+    let score = 0;
+    if (scopeRoot.contains(element)) {
+      score += 4;
+    }
+    if (text.includes("list")) {
+      score += 6;
+    }
+    if (element.closest("form") && scopeRoot.querySelector("form")?.contains(element.closest("form"))) {
+      score += 3;
+    }
+    if (element.tagName === "SUMMARY") {
+      score += 1;
+    }
+
+    return score;
+  }
+
+  function findNativeListTrigger(scopeRoot) {
+    const manageButton = scopeRoot.querySelector(".github-star-lists-plus-repo-manage");
+    const excludedElements = new Set([manageButton].filter(Boolean));
+
+    // Direct match for GitHub's current lists dropdown trigger
+    const directMatch = scopeRoot.querySelector("summary[aria-label*='list' i], summary[aria-label*='List' i]")
+      || scopeRoot.closest("li, article, div")?.querySelector("summary[aria-label*='list' i], summary[aria-label*='List' i]");
+    if (directMatch && !excludedElements.has(directMatch) && isVisible(directMatch)) {
+      return directMatch;
+    }
+
+    // Fallback: scored search
+    const scopes = [
+      scopeRoot,
+      scopeRoot.querySelector("form"),
+      scopeRoot.parentElement,
+      scopeRoot.parentElement?.parentElement,
+      scopeRoot.closest("li, article, section, div, form"),
+      document
+    ].filter(Boolean);
+
+    let bestTrigger = null;
+    let bestScore = -1;
+    const seen = new Set();
+
+    for (const scope of scopes) {
+      const candidates = [
+        ...scope.querySelectorAll("summary, button[aria-haspopup='menu'], button[aria-haspopup='true'], details summary")
+      ];
+
+      for (const candidate of candidates) {
+        if (seen.has(candidate)) {
+          continue;
+        }
+        seen.add(candidate);
+
+        const score = scoreNativeListTrigger(candidate, scopeRoot, excludedElements);
+        if (score > bestScore) {
+          bestScore = score;
+          bestTrigger = candidate;
+        }
+      }
+
+      if (bestScore >= 8) {
+        break;
+      }
+    }
+
+    return bestScore >= 0 ? bestTrigger : null;
+  }
+
+  function findOpenNativePanel(trigger) {
+    const popovers = [
+      ...document.querySelectorAll("details[open] details-menu, [popover]:not([hidden]), [role='dialog'], [role='menu']")
+    ].filter((element) => isVisible(element) && element.textContent.toLowerCase().includes("list"));
+
+    if (popovers.length > 0) {
+      return popovers[0];
+    }
+
+    const details = trigger?.closest("details[open]");
+    if (details) {
+      return details.querySelector("details-menu, [role='menu'], [role='dialog']");
+    }
+
+    return null;
+  }
+
+  async function discoverListActions(scopeRoot) {
+    const trigger = findNativeListTrigger(scopeRoot);
+    if (!trigger) {
+      return [];
+    }
+
+    trigger.click();
+    await core.wait(320);
+
+    const panel = findOpenNativePanel(trigger);
+    if (!panel) {
+      return [];
+    }
+
+    const actions = extractListActionsFromPanel(panel);
+
+    const ownerDocument = trigger.ownerDocument;
+    ownerDocument.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    return actions;
+  }
+
+  async function submitToggleAction(action) {
+    const body = new URLSearchParams();
+    for (const [name, value] of action.payload) {
+      body.append(name, value);
+    }
+
+    const response = await fetch(action.actionUrl, {
+      method: action.method,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+      },
+      body: body.toString()
+    });
+
+    if (!response.ok) {
+      throw new Error(`List update failed: ${response.status}`);
+    }
+  }
+
+  async function fetchStarDateFromStarsSearch(repoKey, username) {
+    if (!repoKey || !username) {
+      return "";
+    }
+
+    const { repo } = core.splitRepoKey(repoKey);
+    const searchTerms = dedupeBy([repoKey, repo].filter(Boolean), (value) => String(value).toLowerCase());
+
+    for (const searchTerm of searchTerms) {
+      const url = buildStarsRepositoriesUrl(username, {
+        query: searchTerm
+      });
+      if (!url) {
+        continue;
+      }
+
+      let response;
+      try {
+        response = await fetch(url, {
+          credentials: "include"
+        });
+      } catch (_error) {
+        continue;
+      }
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const matchedDates = extractStarDateMapFromDocument(doc, [repoKey]);
+      if (matchedDates[repoKey]) {
+        return matchedDates[repoKey];
+      }
+    }
+
+    return "";
+  }
+
+  function watchRepositoryMutations(repoNwo) {
+    if (state.pageObserver) {
+      return;
+    }
+
+    const main = document.querySelector("main");
+    if (!main) {
+      return;
+    }
+
+    const observer = new MutationObserver(core.debounce(() => {
+      if (!isRepositoryPage() || core.readRepositoryNwo() !== repoNwo) {
+        return;
+      }
+
+      const control = pickVisibleStarControl(repoNwo);
+      const dateBadge = findRepositoryDateHost();
+      const nextStarState = control && isRepositoryStarred(control) ? "starred" : "unstarred";
+      const lookupStatus = dateBadge?.dataset.lookupStatus || "";
+
+      if (!control?.container || !dateBadge || dateBadge.dataset.starState !== nextStarState || (nextStarState === "starred" && lookupStatus !== "ready")) {
+        setupRepositoryPage().catch((error) => {
+          console.error("GitHub StarLists++ repository rerender failed", error);
+        });
+      }
+    }, 180));
+
+    observer.observe(main, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["aria-label", "aria-pressed", "class", "open"]
+    });
+
+    state.pageObserver = observer;
+  }
+
+  async function setupRepositoryPage() {
+    state.settings = await storage.getSettings();
+    const repoNwo = core.readRepositoryNwo();
+    if (!repoNwo) return;
+
+    watchRepositoryMutations(repoNwo);
+    const control = pickVisibleStarControl(repoNwo);
+    if (!control?.container) {
+      state.pageCleanup = () => {
+        clearRepositoryDateHosts();
+      };
+      return;
+    }
+
+    clearRepositoryDateHosts();
+    let dateBadge = renderRepositoryStarDate(control, "", "idle");
+
+    const starred = isRepositoryStarred(control);
+    if (starred) {
+      const repoKey = repoNwo.toLowerCase();
+      const starredAt = await lookupRepositoryStarDate(repoKey);
+
+      if (starredAt) {
+        dateBadge = renderRepositoryStarDate(control, starredAt, "ready");
+      } else {
+        dateBadge = renderRepositoryStarDate(control, "", "empty");
+      }
+    } else {
+      dateBadge = renderRepositoryStarDate(control, "", "idle");
+    }
+
+    state.pageCleanup = () => {
+      dateBadge?.remove();
+      clearRepositoryDateHosts();
+    };
+  }
+
+  function watchGenericListMutations() {
+    if (state.pageObserver) {
+      return;
+    }
+
+    const main = document.querySelector("main");
+    if (!main) {
+      return;
+    }
+
+    const observer = new MutationObserver(core.debounce(() => {
+      if (!isGenericRepoListPage()) {
+        return;
+      }
+
+      setupGenericListPage().catch((error) => {
+        console.error("GitHub StarLists++ generic list rerender failed", error);
+      });
+    }, 200));
+
+    observer.observe(main, {
+      childList: true,
+      subtree: true
+    });
+
+    state.pageObserver = observer;
+  }
+
+  async function setupGenericListPage() {
+    state.settings = await storage.getSettings();
+    if (!state.settings?.showStarDate) {
+      watchGenericListMutations();
+      state.pageCleanup = () => {};
+      return;
+    }
+
+    state.cards = collectStarCards();
+    const starredCards = state.cards.filter((card) => {
+      const form = card.starForm;
+      return form?.action?.includes("/unstar");
+    });
+
+    if (starredCards.length === 0) {
+      watchGenericListMutations();
+      state.pageCleanup = () => {};
+      return;
+    }
+
+    await hydrateStarDates(starredCards);
+    state.repoCache = await storage.getRepoCacheEntries(starredCards.map((card) => card.key));
+
+    for (const card of starredCards) {
+      const cacheEntry = state.repoCache?.[card.key] || {};
+      renderCardStarDate(card, cacheEntry);
+    }
+
+    watchGenericListMutations();
+    state.pageCleanup = () => {};
+  }
+
+  function bootstrapContentScript() {
+    if (state.bootstrapped) {
+      return;
+    }
+
+    state.bootstrapped = true;
+    watchRouteChanges();
+    refreshRoute().catch((error) => {
+      console.error("GitHub StarLists++ bootstrap failed", error);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    const handleReady = () => {
+      if (document.readyState === "loading") {
+        return;
+      }
+
+      document.removeEventListener("readystatechange", handleReady);
+      bootstrapContentScript();
+    };
+
+    document.addEventListener("readystatechange", handleReady);
+  } else {
+    bootstrapContentScript();
+  }
+})();
+
